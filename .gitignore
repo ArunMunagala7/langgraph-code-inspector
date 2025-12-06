@@ -1,0 +1,40 @@
+# CRITICAL: Environment variables with API keys
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+*.pyc
+
+# Output files (contain analysis results)
+outputs/
+*.json
+*.png
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Jupyter
+.ipynb_checkpoints
+
+# Distribution
+build/
+dist/
+*.egg-info/

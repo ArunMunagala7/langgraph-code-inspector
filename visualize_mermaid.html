@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Analysis Visualizations</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .section h2 {
+            color: #764ba2;
+            margin-top: 0;
+        }
+        .mermaid {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .info-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Code Analysis Visualizations</h1>
+        <p class="subtitle">Multi-Agent Code Understanding System - Mermaid Diagrams</p>
+        
+        <div class="instructions">
+            <strong>📋 How to use:</strong>
+            <ol>
+                <li>Run: <code>python main.py --sample python_sum_array</code></li>
+                <li>Copy the flowchart and call graph from the output</li>
+                <li>Paste them into the <code>&lt;div class="mermaid"&gt;</code> sections below</li>
+                <li>Open this HTML file in your browser to see the rendered diagrams</li>
+            </ol>
+        </div>
+
+        <div class="info-box">
+            <strong>💡 Example:</strong> The diagrams below show the visualization for the <code>sum_array</code> function.
+        </div>
+
+        <div class="section">
+            <h2>📊 Flowchart - Control Flow</h2>
+            <p>This diagram shows the step-by-step execution flow of the code.</p>
+            <div class="mermaid">
+flowchart TD
+    A[Start] --> B[Initialize total = 0]
+    B --> C[For each x in arr]
+    C --> D[Update total += x]
+    D --> C
+    C --> E[Return total]
+    E --> F[End]
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔗 Call Graph - Code Structure</h2>
+            <p>This diagram shows the relationships between code elements (functions, variables, loops).</p>
+            <div class="mermaid">
+graph TD
+    f_sum_array[sum_array] --> loop_1[for x in arr]
+    f_sum_array --> var_arr[arr]
+    f_sum_array --> var_total[total]
+    f_sum_array --> assign_total_init[total = 0]
+    f_sum_array --> return_total[return total]
+    loop_1 --> var_x[x]
+    loop_1 --> assign_total_update[total += x]
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💻 Original Code</h2>
+            <div class="code-block">def sum_array(arr):
+    total = 0
+    for x in arr:
+        total += x
+    return total</div>
+        </div>
+
+        <div class="section">
+            <h2>🚀 Try More Examples</h2>
+            <p>Run these commands and replace the diagrams above:</p>
+            <ul>
+                <li><code>python main.py --sample python_binary_search</code></li>
+                <li><code>python main.py --sample python_fibonacci</code></li>
+                <li><code>python main.py --sample python_bubble_sort</code></li>
+                <li><code>python main.py --code "your code" --language python</code></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: { 
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>
