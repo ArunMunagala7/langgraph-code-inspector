@@ -1,0 +1,29 @@
+graph TD
+    start([Start])
+    step1[Initialize variables]
+    step2{Array is empty??}
+    step3[Perform binary search]
+    step4{Target found??}
+    return_index[Return index]
+    error[Return -1]
+    end([End])
+
+    start --> step1
+    step1 --> step2
+    step2 -->|Yes| error
+    step2 -->|No| step3
+    step3 --> step4
+    step4 -->|Yes| return_index
+    step4 -->|No| error
+    return_index --> end
+    error --> end
+
+    %% Styling
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style step1 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style step2 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style step3 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style step4 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style return_index fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style error fill:#FFB74D,stroke:#F57C00,stroke-width:2px
+    style end fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff

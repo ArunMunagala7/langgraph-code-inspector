@@ -1,0 +1,37 @@
+graph TD
+    start([Start])
+    step1[Initialize left, right]
+    step2{left <= right?}
+    step3[Calculate mid]
+    step4{arr at mid == target?}
+    step5{arr at mid < target?}
+    step6[Update left = mid + 1]
+    step7[Update right = mid - 1]
+    returnMid[Return index]
+    returnNeg1[Return -1]
+    endNode([End])
+
+    start --> step1
+    step1 --> step2
+    step2 -->|Yes| step3
+    step2 -->|No| returnNeg1
+    step3 --> step4
+    step4 -->|Yes| returnMid
+    step4 -->|No| step5
+    step5 -->|Yes| step6
+    step5 -->|No| step7
+    step6 --> step2
+    step7 --> step2
+    returnMid --> endNode
+    returnNeg1 --> endNode
+
+    %% Styling
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style step1 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style step2 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style step3 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style step4 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style step5 fill:#FFF59D,stroke:#F57F17,stroke-width:2px
+    style returnMid fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style returnNeg1 fill:#FFB74D,stroke:#F57C00,stroke-width:2px
+    style endNode fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff

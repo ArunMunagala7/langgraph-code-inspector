@@ -18,10 +18,15 @@
 - 📈 **VisualizeAgent**: Generate AI-powered flowcharts and call graphs
 - 📝 **ExplainAgent**: Generate multi-level explanations (beginner, technical, line-by-line)
 
-### 🎨 **Advanced Visualizations**
-- **AI-Generated Flowcharts**: Smart layout algorithm with collision-free arrow routing
+### 🎨 **Advanced Visualizations** ✨ NEW
+- **Mermaid Flowcharts** (Recommended): Industry-standard diagrams with automatic validation and error correction
+  - Auto-renders on GitHub, Notion, VS Code, and other platforms
+  - 60% smaller file size vs matplotlib (58KB vs 149KB)
+  - LLM-based error detection and auto-fix loop
+  - Editable `.mmd` source files + rendered PNG
+- **Matplotlib Flowcharts** (Legacy): Smart layout algorithm with collision-free arrow routing
 - **Interactive Call Graphs**: NetworkX-powered function dependency visualization
-- **Real-time Rendering**: Matplotlib-based diagram generation with guaranteed no overlaps
+- **Real-time Rendering**: Professional diagrams with optimized layouts
 
 ### 🌐 **Web Interface**
 - **Gradio UI**: Professional web interface with tabbed navigation
@@ -44,9 +49,11 @@
 |-----------|-----------|---------|
 | **Orchestration** | LangGraph 1.0.4 | Multi-agent workflow management |
 | **AI Engine** | OpenAI GPT-4o-mini | Natural language understanding & code analysis |
-| **Visualization** | Matplotlib 3.10.7 + NetworkX 3.6 | Diagram generation |
+| **Visualization** | Mermaid.js + mermaid-cli 11.12.0 | Modern flowchart generation (primary) |
+| **Legacy Viz** | Matplotlib 3.10.7 + NetworkX 3.6 | Fallback diagram generation |
 | **Web UI** | Gradio 6.0.2 | Interactive web interface |
 | **Language** | Python 3.11+ | Core implementation |
+| **Runtime** | Node.js 25.2.1 (optional) | For Mermaid PNG rendering |
 
 ---
 
@@ -76,6 +83,21 @@ cp .env.example .env
 # OPENAI_API_KEY=sk-your-key-here
 ```
 
+### 5. (Optional) Install Mermaid CLI for enhanced flowcharts
+```bash
+# Install Node.js first (if not installed)
+brew install node  # macOS
+# Or download from https://nodejs.org
+
+# Install mermaid-cli globally
+npm install -g @mermaid-js/mermaid-cli
+
+# Verify installation
+mmdc --version  # Should show 11.x.x
+```
+
+> **Note:** Without mermaid-cli, flowcharts will use matplotlib fallback. Mermaid provides cleaner, industry-standard diagrams.
+
 ---
 
 ## 🚀 Usage
@@ -89,9 +111,10 @@ python app.py
 **Features:**
 - 📝 Paste code or select from samples
 - 🔄 Real-time analysis with progress indicators
-- 📊 Tabbed results: Explanations | Analysis | Flowchart | Call Graph
-- 💾 Download generated diagrams
-- 🎨 Clean, professional UI for presentations
+- 📊 Tabbed results: Explanations | Analysis | Quality Score | Flowchart | Call Graph
+- 🎨 Toggle between Mermaid (modern) and Matplotlib (legacy) flowcharts
+- 💾 Download generated diagrams (.png and .mmd files)
+- 🎯 Clean, professional UI for presentations
 
 ### 💻 Command Line Interface
 
@@ -131,10 +154,50 @@ python main.py --file path/to/code.py --generate-images
 ```
 outputs/
 ├── binary_search_analysis_20250106_143022.json    # Complete analysis
-├── binary_search_flowchart_20250106_143022.png     # AI flowchart
-├── binary_search_flowchart_description.json        # Flowchart steps
-└── binary_search_callgraph_20250106_143022.png     # Call graph
+├── binary_search_flowchart_20250106_143022.png    # AI flowchart
+├── binary_search_flowchart_20250106_143022.mmd    # Mermaid source (editable)
+├── binary_search_flowchart_description.json       # Flowchart steps
+└── binary_search_callgraph_20250106_143022.png    # Call graph
 ```
+
+---
+
+## 🆕 Recent Updates (December 2024)
+
+### ✨ Mermaid Flowchart Integration
+- **Hybrid approach**: LLM generates semantic descriptions → Mermaid syntax → Professional diagrams
+- **Auto-validation**: Detects syntax errors before rendering
+- **Error correction**: LLM-based auto-fix with retry loop (max 2 attempts)
+- **Smart label cleaning**: Removes reserved keywords, special characters, and formatting issues
+- **60% file size reduction**: 58KB vs 149KB for equivalent matplotlib flowcharts
+- **Universal compatibility**: Auto-renders on GitHub, Notion, VS Code, Confluence, Obsidian
+- **Editable source**: `.mmd` text files can be manually edited and re-rendered
+
+### 🗂️ Project Restructuring
+- **`docs/`**: All documentation and markdown files (16 files)
+- **`tests/`**: All test scripts with updated imports (5 files)
+- **Cleaner root**: Only essential files in project root
+- **README files**: Added to docs/ and tests/ for navigation
+
+### 🔧 Technical Improvements
+- Fixed matplotlib arrow rendering (6 arrow types using `ax.annotate()`)
+- Implemented reserved keyword detection (`end` → `endNode`)
+- Label sanitization (removes `()`, `[]`, `??`, trailing `%`)
+- Direct mmdc rendering with fallback to preview mode
+- Updated Gradio UI with Mermaid/Matplotlib toggle
+
+---
+
+## 📚 Documentation
+
+Comprehensive guides available in the `docs/` folder:
+- **[MERMAID_SETUP.md](docs/MERMAID_SETUP.md)** - Complete Mermaid installation and usage guide
+- **[MERMAID_COMPLETE.md](docs/MERMAID_COMPLETE.md)** - Technical details and troubleshooting
+- **[QUICKSTART.md](docs/QUICKSTART.md)** - Quick start guide
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture details
+- **[TESTING_GUIDE.md](docs/TESTING_GUIDE.md)** - How to run tests
+
+See [docs/README.md](docs/README.md) for full documentation index.
 
 ---
 
@@ -173,10 +236,16 @@ outputs/
                      END
 ```
 
-### Key Innovation: AI-Powered Flowcharts
+### Key Innovation: Hybrid Flowchart Generation
 
-Unlike traditional AST-based generators, this system uses **LLM-generated descriptions**:
+**NEW: Mermaid Approach (Recommended)**
+1. **LLM analyzes code** → Understands logic semantically
+2. **Generates flowchart JSON** → Structured step-by-step description
+3. **Converts to Mermaid** → Industry-standard syntax with auto-validation
+4. **Renders with mmdc** → Professional PNG + editable .mmd source
+5. **Auto-error correction** → LLM fixes syntax issues if validation fails
 
+**Legacy: Matplotlib Approach (Fallback)**
 1. **LLM analyzes code** → Understands logic semantically
 2. **Generates structured JSON** → Step-by-step flowchart
 3. **Smart layout** → BFS-based positioning
@@ -186,10 +255,36 @@ Unlike traditional AST-based generators, this system uses **LLM-generated descri
 
 ## 🌟 Key Highlights
 
-- **Collision-Free Visualizations**: Boxes spaced 8+ units horizontally, 4.5 units vertically
-- **Lightweight Knowledge Graph**: Pure JSON, no database required
-- **Modular Multi-Agent Design**: Easy to extend and customize
-- **Natural Language Processing**: Beginner to expert explanations
+- **🎨 Mermaid Integration**: Modern, industry-standard flowcharts with 60% smaller file sizes
+- **🔄 Auto-Validation**: Syntax checking and LLM-based error correction
+- **📝 Editable Diagrams**: `.mmd` source files can be edited and re-rendered
+- **🌍 Universal Compatibility**: Auto-renders on GitHub, Notion, VS Code, Confluence
+- **🚫 Collision-Free Visualizations**: Boxes spaced 8+ units horizontally, 4.5 units vertically
+- **📊 Lightweight Knowledge Graph**: Pure JSON, no database required
+- **🧩 Modular Multi-Agent Design**: Easy to extend and customize
+- **💡 Natural Language Processing**: Beginner to expert explanations
+- **🗂️ Clean Project Structure**: Organized docs/ and tests/ folders
+
+---
+
+## 🧪 Testing
+
+Run tests from project root:
+```bash
+# Test Mermaid flowchart generation
+python tests/test_mermaid_simple.py
+
+# Compare Mermaid vs Matplotlib
+python tests/test_hybrid_flowchart.py
+
+# Full integration test
+python tests/test_integration.py
+
+# All tests
+python run_tests.py
+```
+
+See [tests/README.md](tests/README.md) for detailed testing guide.
 
 ---
 

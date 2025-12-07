@@ -1,0 +1,21 @@
+graph TD
+    start([Start])
+    step1{Array length <= 1?}
+    step2[Select pivot and split]
+    step3[Recursively sort parts]
+    step4[Return array]
+    endNode([End])
+
+    start --> step1
+    step1 -->|Yes| step4
+    step1 -->|No| step2
+    step2 --> step3
+    step3 --> endNode
+    step4 --> endNode
+
+    %% Styling
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style step1 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style step2 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style step3 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style endNode fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff

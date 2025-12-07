@@ -1,0 +1,28 @@
+graph TD
+    start([Start])
+    step1[Check input value]
+    step2{Is n < 0?}
+    step3{Is n <= 1?}
+    step4[Calculate fibonacci - n]
+    return_n[Return n]
+    error[Return error]
+    endNode([End])
+
+    start --> step1
+    step1 --> step2
+    step2 -->|Yes| error
+    step2 -->|No| step3
+    step3 -->|Yes| return_n
+    step3 -->|No| step4
+    step4 --> endNode
+    return_n --> endNode
+    error --> endNode
+
+    %% Styling
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style step1 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style step2 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style step3 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style return_n fill:#90CAF9,stroke:#1976D2,stroke-width:2px
+    style error fill:#FFB74D,stroke:#F57C00,stroke-width:2px
+    style endNode fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff

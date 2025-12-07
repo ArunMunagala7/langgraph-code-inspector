@@ -382,8 +382,13 @@ def render_flowchart_from_description(description: Dict[str, Any], output_path: 
                             path_x = [start_pt[0], routing_x, routing_x, end_pt[0]]
                             path_y = [start_pt[1], start_pt[1], end_pt[1], end_pt[1]]
                             
+                            # Draw path segments
                             ax.plot(path_x, path_y, color='green', linewidth=2.5, linestyle='--')
-                            ax.plot([end_pt[0]], [end_pt[1]], 'go', markersize=8)  # End marker
+                            
+                            # Add arrowhead at the end
+                            ax.annotate('', xy=end_pt, xytext=(path_x[-2], path_y[-2]),
+                                       arrowprops=dict(arrowstyle='->', lw=2.5, color='green', linestyle='--'))
+                            
                             ax.text(routing_x - 1.0, (start_pt[1] + end_pt[1]) / 2, 'Yes', 
                                    fontsize=10, color='green', fontweight='bold', 
                                    style='italic', bbox=dict(boxstyle='round,pad=0.3', 
@@ -423,8 +428,13 @@ def render_flowchart_from_description(description: Dict[str, Any], output_path: 
                             path_x = [start_pt[0], routing_x, routing_x, end_pt[0]]
                             path_y = [start_pt[1], start_pt[1], end_pt[1], end_pt[1]]
                             
+                            # Draw path segments
                             ax.plot(path_x, path_y, color='red', linewidth=2.5, linestyle='--')
-                            ax.plot([end_pt[0]], [end_pt[1]], 'ro', markersize=8)
+                            
+                            # Add arrowhead at the end
+                            ax.annotate('', xy=end_pt, xytext=(path_x[-2], path_y[-2]),
+                                       arrowprops=dict(arrowstyle='->', lw=2.5, color='red', linestyle='--'))
+                            
                             ax.text(routing_x + 1.0, (start_pt[1] + end_pt[1]) / 2, 'No', 
                                    fontsize=10, color='red', fontweight='bold', 
                                    style='italic', bbox=dict(boxstyle='round,pad=0.3', 
@@ -445,15 +455,19 @@ def render_flowchart_from_description(description: Dict[str, Any], output_path: 
                                 mid_x = (start_pt[0] + end_pt[0]) / 2
                                 path_x = [start_pt[0], mid_x, mid_x, end_pt[0]]
                                 path_y = [start_pt[1], start_pt[1], end_pt[1], end_pt[1]]
-                                ax.plot(path_x, path_y, color='red', linewidth=2.5)
-                                ax.plot([end_pt[0]], [end_pt[1]], 'ro', markersize=8)
+                                ax.plot(path_x[:-1], path_y[:-1], color='red', linewidth=2.5)
+                                # Add arrowhead for final segment
+                                ax.annotate('', xy=end_pt, xytext=(path_x[-2], path_y[-2]),
+                                           arrowprops=dict(arrowstyle='->', lw=2.5, color='red'))
                             else:
                                 # Close together - use stepped path (no curves that might cross boxes)
                                 mid_y = (start_pt[1] + end_pt[1]) / 2
                                 path_x = [start_pt[0], start_pt[0] + 1.5, start_pt[0] + 1.5, end_pt[0]]
                                 path_y = [start_pt[1], start_pt[1], end_pt[1], end_pt[1]]
-                                ax.plot(path_x, path_y, color='red', linewidth=2.5)
-                                ax.plot([end_pt[0]], [end_pt[1]], 'ro', markersize=8)
+                                ax.plot(path_x[:-1], path_y[:-1], color='red', linewidth=2.5)
+                                # Add arrowhead for final segment
+                                ax.annotate('', xy=end_pt, xytext=(path_x[-2], path_y[-2]),
+                                           arrowprops=dict(arrowstyle='->', lw=2.5, color='red'))
                             
                             ax.text((x1 + x2) / 2 + 1.5, (y1 + y2) / 2, 'No', fontsize=10, 
                                    color='red', fontweight='bold', style='italic',
@@ -483,8 +497,11 @@ def render_flowchart_from_description(description: Dict[str, Any], output_path: 
                             path_x = [start_pt[0], routing_x, routing_x, end_pt[0]]
                             path_y = [start_pt[1], start_pt[1], end_pt[1], end_pt[1]]
                             
-                            ax.plot(path_x, path_y, color='blue', linewidth=2.5, linestyle='--')
-                            ax.plot([end_pt[0]], [end_pt[1]], 'bo', markersize=8)
+                            # Draw path without final segment
+                            ax.plot(path_x[:-1], path_y[:-1], color='blue', linewidth=2.5, linestyle='--')
+                            # Add arrowhead on final segment
+                            ax.annotate('', xy=end_pt, xytext=(path_x[-2], path_y[-2]),
+                                       arrowprops=dict(arrowstyle='->', lw=2.5, color='blue', linestyle='--'))
                         else:
                             # Normal forward arrow - ALWAYS use straight vertical when aligned
                             start_pt = get_connection_point(step_id, 'bottom')
@@ -495,8 +512,11 @@ def render_flowchart_from_description(description: Dict[str, Any], output_path: 
                                 mid_y = (start_pt[1] + end_pt[1]) / 2
                                 path_x = [start_pt[0], start_pt[0], end_pt[0], end_pt[0]]
                                 path_y = [start_pt[1], mid_y, mid_y, end_pt[1]]
-                                ax.plot(path_x, path_y, color='black', linewidth=2.5)
-                                ax.plot([end_pt[0]], [end_pt[1]], 'ko', markersize=8)
+                                # Draw path without final segment
+                                ax.plot(path_x[:-1], path_y[:-1], color='black', linewidth=2.5)
+                                # Add arrowhead on final segment
+                                ax.annotate('', xy=end_pt, xytext=(path_x[-2], path_y[-2]),
+                                           arrowprops=dict(arrowstyle='->', lw=2.5, color='black'))
                             else:
                                 # Straight down - safe because of vertical spacing
                                 ax.annotate('', xy=end_pt, xytext=start_pt,
