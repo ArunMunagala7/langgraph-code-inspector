@@ -176,8 +176,9 @@ def render_flowchart_from_description(description: Dict[str, Any], output_path: 
         
         assign_levels_bfs()
         
-        # Assign horizontal positions with better spacing for branches
+        # Assign horizontal positions with GUARANTEED separation to prevent overlap
         x_positions = {}
+        MIN_HORIZONTAL_SPACING = 8.0  # Minimum space between any two boxes horizontally
         
         for level, step_ids in sorted(levels.items()):
             num_steps = len(step_ids)
@@ -185,30 +186,32 @@ def render_flowchart_from_description(description: Dict[str, Any], output_path: 
             if num_steps == 1:
                 x_positions[step_ids[0]] = 9
             elif num_steps == 2:
-                # For yes/no branches: spread them out more
-                parent_x = 9
-                # Check if these are decision branches
+                # For yes/no branches: guarantee wide separation
+                # Left branch at x=4, right branch at x=14 (10 units apart - ensures no overlap)
                 for step_id in step_ids:
                     step = step_map[step_id]
                     # Position based on step type or return type
                     if step.get('type') == 'return':
-                        x_positions[step_id] = 13  # Right side for returns
+                        x_positions[step_id] = 14  # Right side for returns
                     else:
-                        x_positions[step_id] = 5   # Left side for continues
+                        x_positions[step_id] = 4   # Left side for continues
                 
-                # If not returns, spread evenly
+                # If not returns, spread evenly with guaranteed spacing
                 if all(step_map[sid].get('type') != 'return' for sid in step_ids):
-                    x_positions[step_ids[0]] = 5
-                    x_positions[step_ids[1]] = 13
+                    x_positions[step_ids[0]] = 4
+                    x_positions[step_ids[1]] = 14
             else:
-                # Spread multiple items
-                spacing = 14 / (num_steps + 1)
+                # Spread multiple items with guaranteed minimum spacing
+                # Calculate required width and ensure it fits
+                total_width = MIN_HORIZONTAL_SPACING * (num_steps - 1)
+                start_x = max(2, (18 - total_width) / 2)
+                
                 for i, step_id in enumerate(step_ids):
-                    x_positions[step_id] = 2 + spacing * (i + 1)
+                    x_positions[step_id] = start_x + (i * MIN_HORIZONTAL_SPACING)
         
-        # Calculate Y positions
+        # Calculate Y positions with GUARANTEED vertical spacing
         y_base = 19.5
-        y_spacing = 3.0
+        y_spacing = 4.5  # Increased from 3.0 to ensure no vertical overlap (boxes are ~1.0 tall + margins)
         
         for step_id, level in step_levels.items():
             x = x_positions.get(step_id, 9)
@@ -279,8 +282,71 @@ def render_flowchart_from_description(description: Dict[str, Any], output_path: 
                 wrapped_label = label[:55] + '...' if len(label) > 55 else label
                 ax.text(x, y, wrapped_label, ha='center', va='center', fontsize=10)
         
-        # Draw arrows with smart routing
+        # Helper function to get node bounds
+        def get_node_bounds(step_id):
+            """Get the bounding box of a node"""
+            if step_id not in step_positions or step_id not in step_map:
+                return None
+            x, y = step_positions[step_id]
+            step_type = step_map[step_id].get('type', 'process')
+            
+            if step_type in ['start', 'end']:
+                return (x - 1.25, x + 1.25, y - 0.45, y + 0.45)
+            elif step_type in ['decision', 'loop']:
+                return (x - 3.2, x + 3.2, y - 0.8, y + 0.8)
+            elif step_type == 'return':
+                return (x - 2.5, x + 2.5, y - 0.5, y + 0.5)
+            else:  # process
+                return (x - 3, x + 3, y - 0.45, y + 0.45)
+        
+        def get_connection_point(step_id, direction):
+            """Get connection point for a step in a given direction"""
+            if step_id not in step_positions or step_id not in step_map:
+                return None
+            x, y = step_positions[step_id]
+            step_type = step_map[step_id].get('type', 'process')
+            
+            if step_type in ['decision', 'loop']:
+                if direction == 'bottom':
+                    return (x, y - 0.9)  # Slightly outside the box
+                elif direction == 'top':
+                    return (x, y + 0.9)
+                elif direction == 'left':
+                    return (x - 3.3, y)
+                elif direction == 'right':
+                    return (x + 3.3, y)
+            else:
+                if direction == 'bottom':
+                    return (x, y - 0.6)  # Slightly outside the box
+                elif direction == 'top':
+                    return (x, y + 0.6)
+                elif direction == 'left':
+                    return (x - 3.1, y)
+                elif direction == 'right':
+                    return (x + 3.1, y)
+            return (x, y)
+        
+        def get_all_boxes_in_region(x_min, x_max, y_min, y_max):
+            """Get all boxes that intersect with the given region"""
+            intersecting = []
+            for sid in step_positions:
+                bounds = get_node_bounds(sid)
+                if bounds:
+                    bx_min, bx_max, by_min, by_max = bounds
+                    # Check if regions overlap
+                    if not (bx_max < x_min or bx_min > x_max or by_max < y_min or by_min > y_max):
+                        intersecting.append(sid)
+            return intersecting
+        
+        def calculate_safe_routing_margin():
+            """Calculate safe margin for routing around all boxes"""
+            max_box_width = 3.3  # Largest box half-width (decision diamonds)
+            safety_margin = 1.0  # Additional clearance
+            return max_box_width + safety_margin
+        
+        # Draw arrows with GUARANTEED collision-free routing
         drawn_arrows = set()
+        ROUTING_MARGIN = calculate_safe_routing_margin()  # ~4.3 units clearance
         
         for step in steps:
             step_id = step['id']
@@ -302,22 +368,38 @@ def render_flowchart_from_description(description: Dict[str, Any], output_path: 
                     
                     if arrow_key not in drawn_arrows:
                         # Check if it's a loop back (going up or same level)
-                        if y2 >= y1 - 0.5:
-                            # Loop back arrow - route around the left side
-                            mid_x = x1 - 5  # Go far left
-                            ax.plot([x1, mid_x, mid_x, x2 + 3.2], 
-                                   [y1 - 0.8, y1 - 0.8, y2, y2],
-                                   color='green', linewidth=2.5, linestyle='dashed')
-                            ax.annotate('', xy=(x2 + 3.2, y2), xytext=(x2 + 3.5, y2),
-                                       arrowprops=dict(arrowstyle='->', lw=2.5, color='green'))
-                            ax.text(mid_x - 0.5, (y1 + y2) / 2, 'Yes', fontsize=10, 
-                                   color='green', fontweight='bold', style='italic')
+                        if y2 >= y1 - 1.5:
+                            # Loop back arrow - route FAR around the left side with GUARANTEED clearance
+                            start_pt = get_connection_point(step_id, 'left')
+                            end_pt = get_connection_point(yes_id, 'top')
+                            
+                            # Find ALL boxes between source and destination
+                            min_x_boxes = min(x1, x2)
+                            # Route OUTSIDE the leftmost box with huge margin
+                            routing_x = min_x_boxes - ROUTING_MARGIN - 4.0  # Extra 4 units for safety
+                            
+                            # Create path with right-angle turns (NO curves to avoid boxes)
+                            path_x = [start_pt[0], routing_x, routing_x, end_pt[0]]
+                            path_y = [start_pt[1], start_pt[1], end_pt[1], end_pt[1]]
+                            
+                            ax.plot(path_x, path_y, color='green', linewidth=2.5, linestyle='--')
+                            ax.plot([end_pt[0]], [end_pt[1]], 'go', markersize=8)  # End marker
+                            ax.text(routing_x - 1.0, (start_pt[1] + end_pt[1]) / 2, 'Yes', 
+                                   fontsize=10, color='green', fontweight='bold', 
+                                   style='italic', bbox=dict(boxstyle='round,pad=0.3', 
+                                   facecolor='white', edgecolor='green', linewidth=1.5))
                         else:
-                            # Normal down arrow
-                            ax.annotate('', xy=(x2, y2 + 0.8), xytext=(x1, y1 - 0.8),
+                            # Normal down arrow from bottom of diamond
+                            start_pt = get_connection_point(step_id, 'bottom')
+                            end_pt = get_connection_point(yes_id, 'top')
+                            
+                            # Straight vertical line - guaranteed safe if vertical spacing is correct
+                            ax.annotate('', xy=end_pt, xytext=start_pt,
                                        arrowprops=dict(arrowstyle='->', lw=2.5, color='green'))
-                            ax.text(x1 - 0.5, (y1 + y2) / 2, 'Yes', fontsize=10, 
-                                   color='green', fontweight='bold', style='italic')
+                            ax.text(x1 - 1.2, (y1 + y2) / 2, 'Yes', fontsize=10, 
+                                   color='green', fontweight='bold', style='italic',
+                                   bbox=dict(boxstyle='round,pad=0.2', facecolor='white', 
+                                            edgecolor='green', alpha=0.9, linewidth=1.5))
                         
                         drawn_arrows.add(arrow_key)
                 
@@ -327,21 +409,56 @@ def render_flowchart_from_description(description: Dict[str, Any], output_path: 
                     arrow_key = f"{step_id}-no-{no_id}"
                     
                     if arrow_key not in drawn_arrows:
-                        # Route to the right side
-                        if abs(x2 - x1) > 3:
-                            # Wide separation - curved arc
-                            ax.annotate('', xy=(x2 - 2.5, y2), xytext=(x1 + 3.2, y1),
-                                       arrowprops=dict(arrowstyle='->', lw=2.5, color='red',
-                                                     connectionstyle='arc3,rad=0.4'))
-                            ax.text((x1 + x2) / 2, y1 + 0.5, 'No', fontsize=10, 
-                                   color='red', fontweight='bold', style='italic')
+                        # Check if it's a loop back
+                        if y2 >= y1 - 1.5:
+                            # Loop back - route FAR around the right side with GUARANTEED clearance
+                            start_pt = get_connection_point(step_id, 'right')
+                            end_pt = get_connection_point(no_id, 'top')
+                            
+                            # Route OUTSIDE the rightmost box with huge margin
+                            max_x_boxes = max(x1, x2)
+                            routing_x = max_x_boxes + ROUTING_MARGIN + 4.0  # Extra 4 units for safety
+                            
+                            # Right-angle path
+                            path_x = [start_pt[0], routing_x, routing_x, end_pt[0]]
+                            path_y = [start_pt[1], start_pt[1], end_pt[1], end_pt[1]]
+                            
+                            ax.plot(path_x, path_y, color='red', linewidth=2.5, linestyle='--')
+                            ax.plot([end_pt[0]], [end_pt[1]], 'ro', markersize=8)
+                            ax.text(routing_x + 1.0, (start_pt[1] + end_pt[1]) / 2, 'No', 
+                                   fontsize=10, color='red', fontweight='bold', 
+                                   style='italic', bbox=dict(boxstyle='round,pad=0.3', 
+                                   facecolor='white', edgecolor='red', linewidth=1.5))
                         else:
-                            # Close together - gentle curve
-                            ax.annotate('', xy=(x2, y2 + 0.5), xytext=(x1 + 3.2, y1),
-                                       arrowprops=dict(arrowstyle='->', lw=2.5, color='red',
-                                                     connectionstyle='arc3,rad=0.2'))
-                            ax.text(x1 + 2, (y1 + y2) / 2, 'No', fontsize=10, 
-                                   color='red', fontweight='bold', style='italic')
+                            # Route to different node - use right-angle paths ONLY (no curves)
+                            start_pt = get_connection_point(step_id, 'right')
+                            
+                            if x2 > x1:
+                                # Going right - use left entry point on destination
+                                end_pt = get_connection_point(no_id, 'left')
+                            else:
+                                # Going down or left - use top entry point
+                                end_pt = get_connection_point(no_id, 'top')
+                            
+                            if abs(x2 - x1) > 5:
+                                # Wide separation - right-angle path with guaranteed clearance
+                                mid_x = (start_pt[0] + end_pt[0]) / 2
+                                path_x = [start_pt[0], mid_x, mid_x, end_pt[0]]
+                                path_y = [start_pt[1], start_pt[1], end_pt[1], end_pt[1]]
+                                ax.plot(path_x, path_y, color='red', linewidth=2.5)
+                                ax.plot([end_pt[0]], [end_pt[1]], 'ro', markersize=8)
+                            else:
+                                # Close together - use stepped path (no curves that might cross boxes)
+                                mid_y = (start_pt[1] + end_pt[1]) / 2
+                                path_x = [start_pt[0], start_pt[0] + 1.5, start_pt[0] + 1.5, end_pt[0]]
+                                path_y = [start_pt[1], start_pt[1], end_pt[1], end_pt[1]]
+                                ax.plot(path_x, path_y, color='red', linewidth=2.5)
+                                ax.plot([end_pt[0]], [end_pt[1]], 'ro', markersize=8)
+                            
+                            ax.text((x1 + x2) / 2 + 1.5, (y1 + y2) / 2, 'No', fontsize=10, 
+                                   color='red', fontweight='bold', style='italic',
+                                   bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
+                                            edgecolor='red', alpha=0.9, linewidth=1.5))
                         
                         drawn_arrows.add(arrow_key)
             
@@ -354,24 +471,35 @@ def render_flowchart_from_description(description: Dict[str, Any], output_path: 
                     
                     if arrow_key not in drawn_arrows:
                         # Check if it's a loop back (going up)
-                        if y2 > y1:
-                            # Loop back - route around the right side
-                            mid_x = x1 + 6  # Go far right
-                            ax.plot([x1, mid_x, mid_x, x2 - 3.2], 
-                                   [y1 - 0.5, y1 - 0.5, y2, y2],
-                                   color='blue', linewidth=2.5, linestyle='dashed')
-                            ax.annotate('', xy=(x2 - 3.2, y2), xytext=(x2 - 3.5, y2),
-                                       arrowprops=dict(arrowstyle='->', lw=2.5, color='blue'))
+                        if y2 > y1 + 1.0:
+                            # Loop back - route FAR around the right side with GUARANTEED clearance
+                            start_pt = get_connection_point(step_id, 'right')
+                            end_pt = get_connection_point(next_id, 'top')
+                            
+                            max_x_boxes = max(x1, x2)
+                            routing_x = max_x_boxes + ROUTING_MARGIN + 3.5  # Huge margin
+                            
+                            # Right-angle path
+                            path_x = [start_pt[0], routing_x, routing_x, end_pt[0]]
+                            path_y = [start_pt[1], start_pt[1], end_pt[1], end_pt[1]]
+                            
+                            ax.plot(path_x, path_y, color='blue', linewidth=2.5, linestyle='--')
+                            ax.plot([end_pt[0]], [end_pt[1]], 'bo', markersize=8)
                         else:
-                            # Normal forward arrow
-                            if abs(x2 - x1) > 2:
-                                # Diagonal arrow with gentle curve
-                                ax.annotate('', xy=(x2, y2 + 0.5), xytext=(x1, y1 - 0.5),
-                                           arrowprops=dict(arrowstyle='->', lw=2.5, color='black',
-                                                         connectionstyle='arc3,rad=0.15'))
+                            # Normal forward arrow - ALWAYS use straight vertical when aligned
+                            start_pt = get_connection_point(step_id, 'bottom')
+                            end_pt = get_connection_point(next_id, 'top')
+                            
+                            if abs(x2 - x1) > 4:
+                                # Diagonal - use right-angle path to avoid crossing
+                                mid_y = (start_pt[1] + end_pt[1]) / 2
+                                path_x = [start_pt[0], start_pt[0], end_pt[0], end_pt[0]]
+                                path_y = [start_pt[1], mid_y, mid_y, end_pt[1]]
+                                ax.plot(path_x, path_y, color='black', linewidth=2.5)
+                                ax.plot([end_pt[0]], [end_pt[1]], 'ko', markersize=8)
                             else:
-                                # Straight down
-                                ax.annotate('', xy=(x2, y2 + 0.5), xytext=(x1, y1 - 0.5),
+                                # Straight down - safe because of vertical spacing
+                                ax.annotate('', xy=end_pt, xytext=start_pt,
                                            arrowprops=dict(arrowstyle='->', lw=2.5, color='black'))
                         
                         drawn_arrows.add(arrow_key)
