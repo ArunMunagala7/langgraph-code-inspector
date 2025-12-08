@@ -1,36 +1,23 @@
 graph TD
     start([Start])
-    step1[Initialize left & right]
-    step2{Left <= Right?}
-    step3[Calculate mid]
-    step4{arr[mid] == target?}
-    step5{arr[mid] < target?}
-    step6[Update left]
-    step7[Update right]
-    stepEnd([Return -1])
-    stepFound([Return mid])
+    step1[Initialize]
+    step2{Check condition}
+    step3[Process]
+    loop[Update]
+    stepEnd([End])
     
     start --> step1
     step1 --> step2
     step2 -->|Yes| step3
-    step3 --> step4
-    step4 -->|Yes| stepFound
-    step4 -->|No| step5
-    step5 -->|Yes| step6
-    step5 -->|No| step7
-    step6 --> step2
-    step7 --> step2
+    step3 --> loop
+    loop -.->|Loop Back| step2
     step2 -->|No| stepEnd
     
     style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
     style stepEnd fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
-    style stepFound fill:#64B5F6,stroke:#1976D2,stroke-width:2px
-    style step1 fill:#64B5F6,stroke:#1976D2,stroke-width:2px
     style step2 fill:#FFD54F,stroke:#F9A825,stroke-width:2px
+    style step1 fill:#64B5F6,stroke:#1976D2,stroke-width:2px
     style step3 fill:#64B5F6,stroke:#1976D2,stroke-width:2px
-    style step4 fill:#FFD54F,stroke:#F9A825,stroke-width:2px
-    style step5 fill:#FFD54F,stroke:#F9A825,stroke-width:2px
-    style step6 fill:#64B5F6,stroke:#1976D2,stroke-width:2px
-    style step7 fill:#64B5F6,stroke:#1976D2,stroke-width:2px
+    style loop fill:#64B5F6,stroke:#1976D2,stroke-width:2px
     
     linkStyle default stroke:#1976D2,stroke-width:2.5px;

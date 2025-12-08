@@ -116,8 +116,12 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
             # Create temp directory for images
             os.makedirs("temp", exist_ok=True)
             
-            # Generate flowchart
-            flowchart_path = os.path.abspath("temp/flowchart.png")
+            # Generate unique filenames based on code hash (ensures different codes get different flowcharts)
+            import hashlib
+            code_hash = hashlib.md5(code.encode()).hexdigest()[:8]
+            
+            # Generate flowchart with unique name
+            flowchart_path = os.path.abspath(f"temp/flowchart_{code_hash}.png")
             if use_mermaid:
                 try:
                     from core.mermaid_generator_v2 import create_flowchart
@@ -158,8 +162,8 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
                 ):
                     flowchart_img = flowchart_path
             
-            # Generate call graph
-            callgraph_path = os.path.abspath("temp/callgraph.png")
+            # Generate call graph with unique name
+            callgraph_path = os.path.abspath(f"temp/callgraph_{code_hash}.png")
             if create_callgraph_image(result['knowledge_graph'], callgraph_path):
                 callgraph_img = callgraph_path
             
