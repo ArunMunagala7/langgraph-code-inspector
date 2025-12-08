@@ -142,8 +142,18 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
 
 def load_sample(sample_name):
     """Load a sample code snippet."""
-    if sample_name in SAMPLES:
-        return SAMPLES[sample_name]['code'], SAMPLES[sample_name]['language']
+    if not sample_name:
+        return "", "python"
+    
+    # Extract actual sample name from "[Difficulty] name" format
+    if sample_name.startswith("["):
+        # Format: "[Easy] python_sum_array" -> "python_sum_array"
+        sample_key = sample_name.split("] ", 1)[1] if "] " in sample_name else sample_name
+    else:
+        sample_key = sample_name
+    
+    if sample_key in SAMPLES:
+        return SAMPLES[sample_key]['code'], SAMPLES[sample_key]['language']
     return "", "python"
 
 
@@ -300,10 +310,14 @@ with gr.Blocks(title="AI Code Understanding System") as demo:
             file_status = gr.Markdown("", visible=True)
             
             # Sample selector
+            sample_choices = [""] + [
+                f"[{sample['difficulty']}] {name}" 
+                for name, sample in SAMPLES.items()
+            ]
             sample_dropdown = gr.Dropdown(
-                choices=[""] + list(SAMPLES.keys()),
-                label="📚 Or Load Sample Code",
-                info="Choose a pre-loaded algorithm"
+                choices=sample_choices,
+                label="📚 Load Sample Code",
+                info="Choose a pre-loaded algorithm (Easy → Hard)"
             )
             
             # Code input

@@ -9,7 +9,8 @@ from typing import Dict, Any, Optional
 from core.utils import get_llm_response
 
 
-MERMAID_FLOWCHART_PROMPT = """You are a flowchart design expert. Create a SIMPLE, CLEAR flowchart for this code.
+MERMAID_FLOWCHART_PROMPT = """You are a flowchart design expert. Create a CLEAR, ACCURATE flowchart for this code.
+CRITICAL: Show ALL loops, recursion, and backward flows accurately!
 
 Code:
 ```
@@ -20,35 +21,47 @@ Analysis:
 {analysis}
 
 STRICT RULES:
-1. Maximum 10 steps (keep it simple!)
+1. Maximum 15 steps (show ALL control flow including loops)
 2. Each label ≤ 40 characters
-3. Maximum 2 decision nodes
-4. Prefer linear flow over complex branching
-5. Use clear, concise labels
+3. MUST detect and show loops/iterations with arrows going BACK to earlier steps
+4. MUST detect and show recursive calls with arrows going BACK to start
+5. For while/for loops: decision box branches back to loop body or condition
+6. For recursion: show function calling itself with backwards arrow to start
+7. Use clear labels for each action/decision
 
 Return a JSON object with this structure:
 {{
   "steps": [
     {{"id": "start", "type": "start", "label": "Start", "next": "step1"}},
-    {{"id": "step1", "type": "process", "label": "Initialize variables", "next": "step2"}},
-    {{"id": "step2", "type": "decision", "label": "Valid input?", "yes": "step3", "no": "error"}},
-    {{"id": "step3", "type": "process", "label": "Process data", "next": "end"}},
-    {{"id": "error", "type": "return", "label": "Return error", "next": "end"}},
+    {{"id": "step1", "type": "process", "label": "Initialize", "next": "step2"}},
+    {{"id": "step2", "type": "loop", "label": "While i < n?", "yes": "step3", "no": "end"}},
+    {{"id": "step3", "type": "process", "label": "Do something", "next": "step4"}},
+    {{"id": "step4", "type": "process", "label": "Increment i", "loop_back": "step2"}},
     {{"id": "end", "type": "end", "label": "End"}}
-  ],
-  "main_path": ["start", "step1", "step2", "step3", "end"],
-  "error_paths": ["error"]
+  ]
 }}
 
 Step types:
 - "start": Entry point
 - "end": Exit point  
 - "process": Action/computation
-- "decision": Yes/No question
-- "return": Return statement
-- "loop": Loop condition (treat as decision)
+- "decision": Yes/No condition
+- "loop": Loop condition (while/for) - use yes/no branches
+- "recursive_call": Recursive function call
 
-IMPORTANT: Keep flowchart simple and readable. Return ONLY valid JSON.
+LOOP HANDLING:
+- For while loops: Create a loop-type step with yes/no branches
+- For for loops: Create initialization, then loop-type condition, yes goes to body
+- Body steps should have "loop_back" pointing to loop condition or counter update
+- Example loop_back: {{"id": "increment", "type": "process", "label": "i += 1", "loop_back": "condition"}}
+
+RECURSION HANDLING:
+- If function calls itself, create "recursive_call" type steps
+- Use "loop_back": "start" to show recursion loops back to function entry
+- Show base case separately from recursive case
+- Example: {{"id": "recur", "type": "recursive_call", "label": "Call func(n-1)", "loop_back": "start"}}
+
+IMPORTANT: Return ONLY valid JSON. Show loops/recursion with loop_back property pointing to target step id.
 """
 
 
@@ -143,8 +156,9 @@ def validate_flowchart(description: Dict[str, Any]) -> tuple[bool, str]:
         next_id = step.get('next')
         yes_id = step.get('yes')
         no_id = step.get('no')
+        loop_back_id = step.get('loop_back')
         
-        for target in [next_id, yes_id, no_id]:
+        for target in [next_id, yes_id, no_id, loop_back_id]:
             if target and target not in step_ids:
                 return False, f"Invalid connection: {step['id']} → {target}"
     
@@ -187,6 +201,8 @@ def convert_to_mermaid(description: Dict[str, Any]) -> str:
             step['yes'] = id_mapping.get(step['yes'], step['yes'])
         if 'no' in step and step['no']:
             step['no'] = id_mapping.get(step['no'], step['no'])
+        if 'loop_to' in step and step['loop_to']:
+            step['loop_to'] = id_mapping.get(step['loop_to'], step['loop_to'])
     
     # Update path lists
     main_path = {id_mapping.get(sid, sid) for sid in main_path}
@@ -233,6 +249,7 @@ def convert_to_mermaid(description: Dict[str, Any]) -> str:
     lines.append('')
     
     # Define connections
+    connection_line = []
     for step in steps:
         step_id = step['id']
         step_type = step.get('type', 'process')
@@ -243,14 +260,23 @@ def convert_to_mermaid(description: Dict[str, Any]) -> str:
             no_target = step.get('no')
             
             if yes_target:
-                lines.append(f'    {step_id} -->|Yes| {yes_target}')
+                connection_line.append(f'    {step_id} -->|Yes| {yes_target}')
             if no_target:
-                lines.append(f'    {step_id} -->|No| {no_target}')
+                connection_line.append(f'    {step_id} -->|No| {no_target}')
         else:
             # Regular connection
             next_target = step.get('next')
             if next_target:
-                lines.append(f'    {step_id} --> {next_target}')
+                connection_line.append(f'    {step_id} --> {next_target}')
+        
+        # Handle loop_back (for loops and recursion)
+        loop_target = step.get('loop_back')
+        if loop_target:
+            connection_line.append(f'    {step_id} -.->|Loop| {loop_target}')
+    
+    # Add connections
+    for conn in connection_line:
+        lines.append(conn)
     
     # Add blank line
     lines.append('')
@@ -258,7 +284,7 @@ def convert_to_mermaid(description: Dict[str, Any]) -> str:
     # Add styling for different path types
     lines.append('    %% Styling')
     
-    # Style main path nodes
+    # Style nodes
     for step in steps:
         step_id = step['id']
         step_type = step.get('type', 'process')
@@ -273,6 +299,11 @@ def convert_to_mermaid(description: Dict[str, Any]) -> str:
             lines.append(f'    style {step_id} fill:#90CAF9,stroke:#1976D2,stroke-width:2px')
         elif step_type in ['decision', 'loop']:
             lines.append(f'    style {step_id} fill:#FFF59D,stroke:#F57F17,stroke-width:2px')
+    
+    # Add arrow styling for better visibility
+    lines.append('    %% Arrow styling for visibility')
+    lines.append('    linkStyle default stroke:#1976D2,stroke-width:2px,color:#1976D2;')
+    lines.append('    linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 stroke:#0D47A1,stroke-width:2.5px;')
     
     # Join and ensure no trailing special characters
     mermaid_code = '\n'.join(lines)

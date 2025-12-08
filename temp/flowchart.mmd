@@ -1,28 +1,44 @@
 graph TD
     start([Start])
-    step1[Check input value]
-    step2{Is n < 0?}
-    step3{Is n <= 1?}
-    step4[Calculate fibonacci - n]
-    return_n[Return n]
-    error[Return error]
+    step1[Initialize cache]
+    step2{Key in cache?}
+    step3[Remove key from order]
+    step4[Append key to order]
+    step5[Return -1]
+    step6[Return cache at key]
+    step7{Key in cache?}
+    step8[Remove key from order]
+    step9[Update cache at key]
+    step10{Cache full?}
+    step11[Pop oldest key]
+    step12[Add key to cache]
+    step13[Append key to order]
     endNode([End])
 
     start --> step1
     step1 --> step2
-    step2 -->|Yes| error
-    step2 -->|No| step3
-    step3 -->|Yes| return_n
-    step3 -->|No| step4
-    step4 --> endNode
-    return_n --> endNode
-    error --> endNode
+    step2 -->|Yes| step3
+    step2 -->|No| step5
+    step3 --> step4
+    step4 --> step6
+    step5 --> endNode
+    step6 --> endNode
+    step7 -->|Yes| step8
+    step7 -->|No| step10
+    step8 --> step9
+    step9 --> step6
+    step10 -->|Yes| step11
+    step10 -->|No| step12
+    step11 --> step12
+    step12 --> step13
+    step13 --> endNode
 
     %% Styling
     style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
-    style step1 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
-    style step2 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
-    style step3 fill:#90CAF9,stroke:#1976D2,stroke-width:2px
-    style return_n fill:#90CAF9,stroke:#1976D2,stroke-width:2px
-    style error fill:#FFB74D,stroke:#F57C00,stroke-width:2px
+    style step2 fill:#FFF59D,stroke:#F57F17,stroke-width:2px
+    style step7 fill:#FFF59D,stroke:#F57F17,stroke-width:2px
+    style step10 fill:#FFF59D,stroke:#F57F17,stroke-width:2px
     style endNode fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    %% Arrow styling for visibility
+    linkStyle default stroke:#1976D2,stroke-width:2px;
+    linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13 stroke:#0D47A1,stroke-width:2.5px;
