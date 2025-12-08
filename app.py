@@ -120,26 +120,28 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
             flowchart_path = os.path.abspath("temp/flowchart.png")
             if use_mermaid:
                 try:
-                    from core.mermaid_generator import generate_mermaid_flowchart, render_mermaid_to_png
+                    from core.mermaid_generator_v2 import create_flowchart
                     
-                    # Generate Mermaid flowchart (returns Mermaid code string)
-                    mermaid_code = generate_mermaid_flowchart(
+                    success = create_flowchart(
                         code,
-                        result['explanations'],
-                        result['analysis']
+                        result['analysis'],
+                        flowchart_path
                     )
                     
-                    if mermaid_code:
-                        success = render_mermaid_to_png(mermaid_code, flowchart_path)
-                        if success and os.path.exists(flowchart_path):
+                    if success and os.path.exists(flowchart_path):
+                        flowchart_img = flowchart_path
+                        print("✅ Mermaid flowchart generated!")
+                    else:
+                        print("⚠️ Mermaid rendering failed")
+                        if create_smart_flowchart(
+                            result['code'],
+                            result['explanations'],
+                            result['analysis'],
+                            flowchart_path
+                        ):
                             flowchart_img = flowchart_path
-                            print("✅ Mermaid flowchart generated!")
-                        else:
-                            print(f"⚠️ Render returned {success}, file exists: {os.path.exists(flowchart_path)}")
                 except Exception as e:
-                    print(f"⚠️ Mermaid generation failed, using matplotlib: {e}")
-                    import traceback
-                    traceback.print_exc()
+                    print(f"⚠️ Mermaid error: {e}")
                     if create_smart_flowchart(
                         result['code'],
                         result['explanations'],
