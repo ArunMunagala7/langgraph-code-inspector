@@ -1,44 +1,28 @@
 graph TD
     start([Start])
-    step1[Initialize cache]
-    step2{Key in cache?}
-    step3[Remove key from order]
-    step4[Append key to order]
-    step5[Return -1]
-    step6[Return cache at key]
-    step7{Key in cache?}
-    step8[Remove key from order]
-    step9[Update cache at key]
-    step10{Cache full?}
-    step11[Pop oldest key]
-    step12[Add key to cache]
-    step13[Append key to order]
+    step1[Initialize n = len - arr]
+    step2{For i in range - n?}
+    step3{For j in range - 0, n - i - 1?}
+    step4{Is arr at j > arr at j + 1 ?}
+    step5[Swap arr at j and arr at j + 1]
+    step6[Increment j]
     endNode([End])
 
     start --> step1
     step1 --> step2
     step2 -->|Yes| step3
-    step2 -->|No| step5
-    step3 --> step4
-    step4 --> step6
-    step5 --> endNode
-    step6 --> endNode
-    step7 -->|Yes| step8
-    step7 -->|No| step10
-    step8 --> step9
-    step9 --> step6
-    step10 -->|Yes| step11
-    step10 -->|No| step12
-    step11 --> step12
-    step12 --> step13
-    step13 --> endNode
+    step2 -->|No| endNode
+    step3 -->|Yes| step4
+    step3 -->|No| step2
+    step4 -->|Yes| step5
+    step4 -->|No| step6
+    step5 --> step6
+    step6 -.->|Loop| step3
 
     %% Styling
     style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
     style step2 fill:#FFF59D,stroke:#F57F17,stroke-width:2px
-    style step7 fill:#FFF59D,stroke:#F57F17,stroke-width:2px
-    style step10 fill:#FFF59D,stroke:#F57F17,stroke-width:2px
+    style step3 fill:#FFF59D,stroke:#F57F17,stroke-width:2px
+    style step4 fill:#FFF59D,stroke:#F57F17,stroke-width:2px
     style endNode fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
-    %% Arrow styling for visibility
-    linkStyle default stroke:#1976D2,stroke-width:2px;
-    linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13 stroke:#0D47A1,stroke-width:2.5px;
+    %% Arrow styling

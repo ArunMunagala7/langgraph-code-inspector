@@ -300,10 +300,8 @@ def convert_to_mermaid(description: Dict[str, Any]) -> str:
         elif step_type in ['decision', 'loop']:
             lines.append(f'    style {step_id} fill:#FFF59D,stroke:#F57F17,stroke-width:2px')
     
-    # Add arrow styling for better visibility
-    lines.append('    %% Arrow styling for visibility')
-    lines.append('    linkStyle default stroke:#1976D2,stroke-width:2px,color:#1976D2;')
-    lines.append('    linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 stroke:#0D47A1,stroke-width:2.5px;')
+    # Add arrow styling for better visibility (simple version that doesn't break parsing)
+    lines.append('    %% Arrow styling')
     
     # Join and ensure no trailing special characters
     mermaid_code = '\n'.join(lines)
@@ -434,13 +432,16 @@ def render_mermaid_to_png(mermaid_code: str, output_path: str, max_retries: int 
         True if successful
     """
     try:
+        # Ensure output directory exists
+        os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else '.', exist_ok=True)
+        
         # Save Mermaid code to temp file
         mmd_path = output_path.replace('.png', '.mmd')
         with open(mmd_path, 'w') as f:
             f.write(mermaid_code)
         print(f"  💾 Saved Mermaid code: {mmd_path}")
         
-        # Try to render with mermaid-cli directly
+        # Try to render with mermaid-cli
         try:
             result = subprocess.run(
                 ['mmdc', '-i', mmd_path, '-o', output_path, '-b', 'transparent'],
@@ -454,13 +455,14 @@ def render_mermaid_to_png(mermaid_code: str, output_path: str, max_retries: int 
                 print(f"  ✅ Rendered PNG with mmdc: {size:,} bytes")
                 return True
             else:
-                # Rendering failed, try validation and fix
+                # Rendering failed, try to fix
                 error_msg = result.stderr if result.stderr else result.stdout
-                print(f"  ⚠️  Initial rendering failed, attempting fixes...")
+                print(f"  ⚠️  Rendering failed: {error_msg[:100]}")
+                print(f"  🔧 Attempting to fix Mermaid code...")
                 
                 current_code = mermaid_code
                 for attempt in range(max_retries):
-                    print(f"  🔧 Fix attempt {attempt + 1}/{max_retries}...")
+                    print(f"     Fix attempt {attempt + 1}/{max_retries}...")
                     current_code = fix_mermaid_with_llm(current_code, error_msg)
                     
                     # Save and try again
@@ -482,6 +484,8 @@ def render_mermaid_to_png(mermaid_code: str, output_path: str, max_retries: int 
                     error_msg = result.stderr if result.stderr else result.stdout
                 
                 print(f"  ❌ Could not fix errors after {max_retries} attempts")
+                print(f"  📝 Creating fallback preview...")
+                return create_mermaid_preview(mermaid_code, output_path)
                         
         except FileNotFoundError:
             print("  ℹ️  mermaid-cli (mmdc) not installed")
@@ -492,15 +496,11 @@ def render_mermaid_to_png(mermaid_code: str, output_path: str, max_retries: int 
             print("  ⚠️  mmdc rendering timed out")
             return create_mermaid_preview(mermaid_code, output_path)
         
-        # If we get here, rendering failed even after fixes
-        print("  📝 Creating fallback visualization...")
-        return create_mermaid_preview(mermaid_code, output_path)
-        
     except Exception as e:
         print(f"  ❌ Error rendering Mermaid: {e}")
         import traceback
         traceback.print_exc()
-        return False
+        return create_mermaid_preview(mermaid_code, output_path)
 
 
 def create_mermaid_preview(mermaid_code: str, output_path: str):

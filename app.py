@@ -89,7 +89,7 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
             os.makedirs("temp", exist_ok=True)
             
             # Generate flowchart
-            flowchart_path = "temp/flowchart.png"
+            flowchart_path = os.path.abspath("temp/flowchart.png")
             if use_mermaid:
                 try:
                     from core.mermaid_generator import generate_mermaid_flowchart, render_mermaid_to_png
@@ -102,11 +102,16 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
                     )
                     
                     if mermaid_code:
-                        if render_mermaid_to_png(mermaid_code, flowchart_path):
+                        success = render_mermaid_to_png(mermaid_code, flowchart_path)
+                        if success and os.path.exists(flowchart_path):
                             flowchart_img = flowchart_path
                             print("✅ Mermaid flowchart generated!")
+                        else:
+                            print(f"⚠️ Render returned {success}, file exists: {os.path.exists(flowchart_path)}")
                 except Exception as e:
                     print(f"⚠️ Mermaid generation failed, using matplotlib: {e}")
+                    import traceback
+                    traceback.print_exc()
                     if create_smart_flowchart(
                         result['code'],
                         result['explanations'],
@@ -124,7 +129,7 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
                     flowchart_img = flowchart_path
             
             # Generate call graph
-            callgraph_path = "temp/callgraph.png"
+            callgraph_path = os.path.abspath("temp/callgraph.png")
             if create_callgraph_image(result['knowledge_graph'], callgraph_path):
                 callgraph_img = callgraph_path
             
@@ -358,13 +363,13 @@ with gr.Blocks(title="AI Code Understanding System") as demo:
             gr.Markdown("### 📊 Results")
             
             with gr.Tab("💬 Explanations"):
-                explanation_output = gr.Markdown(label="Explanations")
+                explanation_output = gr.Textbox(label="Explanations", interactive=False, lines=15, max_lines=20)
             
             with gr.Tab("🔍 Analysis"):
-                analysis_output = gr.Markdown(label="Analysis")
+                analysis_output = gr.Textbox(label="Analysis", interactive=False, lines=15, max_lines=20)
             
             with gr.Tab("⭐ Quality Score"):
-                quality_output = gr.Markdown(label="Code Quality Report")
+                quality_output = gr.Textbox(label="Code Quality Report", interactive=False, lines=15, max_lines=20)
             
             with gr.Tab("📈 Flowchart"):
                 flowchart_output = gr.Image(label="Code Flowchart", type="filepath")
