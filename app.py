@@ -36,41 +36,69 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
         print(f"\n🔍 Analyzing {language} code...")
         result = run_code_inspector(code, language)
         
-        # Format explanation
+        # Format explanation with better styling
         explanation = f"""
-## 📝 Simple Explanation
-{result['explanations']['simple']}
+# 📝 Code Explanation
 
-## 🔬 Technical Explanation
+---
+
+## 📌 Simple Explanation
+> {result['explanations']['simple']}
+
+---
+
+## 🔬 Technical Deep Dive
 {result['explanations']['technical']}
 
+---
+
 ## 📊 Summary
-{result['explanations']['summary']}
+> {result['explanations']['summary']}
 """
         
-        # Format analysis
+        # Format analysis with better styling
         bugs = result['analysis'].get('bugs', [])
         suggestions = result['analysis'].get('suggestions', [])
         edge_cases = result['analysis'].get('edge_cases', [])
         complexity = result['analysis'].get('complexity', {})
         
+        bugs_section = '\n'.join([f"- {b if isinstance(b, str) else b.get('description', str(b))}" for b in bugs]) if bugs else "✅ No bugs detected"
+        suggestions_section = '\n'.join([f"- {s if isinstance(s, str) else s.get('description', str(s))}" for s in suggestions]) if suggestions else "✅ No suggestions"
+        edge_cases_section = '\n'.join([f"- {e if isinstance(e, str) else e.get('description', str(e))}" for e in edge_cases]) if edge_cases else "✅ No edge cases identified"
+        
         analysis = f"""
+# 🔍 Code Analysis Report
+
+---
+
 ## 🐛 Potential Bugs ({len(bugs)})
-{chr(10).join(['• ' + (b if isinstance(b, str) else b.get('description', str(b))) for b in bugs]) if bugs else '✅ No bugs detected'}
+{bugs_section}
+
+---
 
 ## 💡 Suggestions ({len(suggestions)})
-{chr(10).join(['• ' + (s if isinstance(s, str) else s.get('description', str(s))) for s in suggestions]) if suggestions else '✅ No suggestions'}
+{suggestions_section}
+
+---
 
 ## ⚠️ Edge Cases ({len(edge_cases)})
-{chr(10).join(['• ' + (e if isinstance(e, str) else e.get('description', str(e))) for e in edge_cases]) if edge_cases else '✅ No edge cases identified'}
+{edge_cases_section}
 
-## ⏱️ Complexity
-- **Time**: {complexity.get('time', 'N/A')}
-- **Space**: {complexity.get('space', 'N/A')}
+---
 
-## 📈 Knowledge Graph
-- **Nodes**: {len(result['knowledge_graph'].get('nodes', []))}
-- **Edges**: {len(result['knowledge_graph'].get('edges', []))}
+## ⏱️ Complexity Analysis
+| Metric | Value |
+|--------|-------|
+| **Time Complexity** | {complexity.get('time', 'N/A')} |
+| **Space Complexity** | {complexity.get('space', 'N/A')} |
+
+---
+
+## 📈 Knowledge Graph Statistics
+| Metric | Count |
+|--------|-------|
+| **Nodes** | {len(result['knowledge_graph'].get('nodes', []))} |
+| **Edges** | {len(result['knowledge_graph'].get('edges', []))} |
 """
         
         # Generate quality scores
@@ -363,13 +391,13 @@ with gr.Blocks(title="AI Code Understanding System") as demo:
             gr.Markdown("### 📊 Results")
             
             with gr.Tab("💬 Explanations"):
-                explanation_output = gr.Textbox(label="Explanations", interactive=False, lines=15, max_lines=20)
+                explanation_output = gr.Markdown(label="Explanations")
             
             with gr.Tab("🔍 Analysis"):
-                analysis_output = gr.Textbox(label="Analysis", interactive=False, lines=15, max_lines=20)
+                analysis_output = gr.Markdown(label="Analysis")
             
             with gr.Tab("⭐ Quality Score"):
-                quality_output = gr.Textbox(label="Code Quality Report", interactive=False, lines=15, max_lines=20)
+                quality_output = gr.Markdown(label="Code Quality Report")
             
             with gr.Tab("📈 Flowchart"):
                 flowchart_output = gr.Image(label="Code Flowchart", type="filepath")
@@ -491,6 +519,18 @@ if __name__ == "__main__":
     os.makedirs("temp", exist_ok=True)
     
     # Launch the app
+    print("\n" + "="*80)
+    print("🚀 Gradio Web UI Starting...")
+    print("="*80)
+    print("\n🌐 Open your browser at: http://localhost:7860")
+    print("\n📚 Features:")
+    print("   • 10 Test Cases (Easy → Hard)")
+    print("   • AI-powered code analysis")
+    print("   • Flowcharts with loops/recursion")
+    print("   • Call graphs & complexity analysis")
+    print("   • Quality scoring")
+    print("\n" + "="*80 + "\n")
+    
     demo.launch(
         server_name="0.0.0.0",  # Allow external access
         server_port=7860,
