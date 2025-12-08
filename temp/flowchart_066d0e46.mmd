@@ -1,0 +1,17 @@
+graph TD
+    start([Start - __init__])
+    cond_1{" Check- not self.is_empty()"}
+    cond_2{" Check- not self.is_empty()"}
+    process_3["Pop Item (self.items = [])"]
+    return_4["Return Result"]
+    end_5([End])
+    start --> cond_1
+    cond_1 --> cond_2
+    cond_2 --> process_3
+    process_3 --> return_4
+    return_4 -.->|Recursive Call| start
+    return_4 --> end_5
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_5 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

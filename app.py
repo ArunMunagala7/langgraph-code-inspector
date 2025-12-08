@@ -15,16 +15,15 @@ from core.notebook_parser import parse_notebook, is_notebook_file, get_notebook_
 from agents.quality_agent import score_code_quality, format_quality_report
 
 
-def analyze_code(code, language, generate_images, use_mermaid=True, progress=None):
+def analyze_code(code, language, generate_images, use_mermaid=True):
     """
-    Analyze code and return results with streaming progress updates.
+    Analyze code and return results.
     
     Args:
         code: Source code to analyze
         language: Programming language
         generate_images: Whether to generate diagram images
         use_mermaid: Whether to use Mermaid for flowcharts (default: True)
-        progress: Gradio progress callback for streaming updates
         
     Returns:
         Tuple of (explanation, analysis, quality_report, flowchart_img, callgraph_img)
@@ -33,18 +32,10 @@ def analyze_code(code, language, generate_images, use_mermaid=True, progress=Non
         if not code.strip():
             return "⚠️ Please enter some code to analyze", "", "", None, None
         
-        # Helper function to safely call progress
-        def update_progress(value, desc):
-            if progress:
-                progress(value, desc=desc)
-        
         # Update progress: Running analysis
-        update_progress(0.1, "🔍 Analyzing code...")
         print(f"\n🔍 Analyzing {language} code...")
         result = run_code_inspector(code, language)
-        update_progress(0.3, "✅ Analysis complete")
         
-        update_progress(0.35, "📝 Formatting explanation...")
         # Format explanation with detailed styling
         explanation = f"""
 # 📝 Code Explanation
@@ -168,7 +159,7 @@ def analyze_code(code, language, generate_images, use_mermaid=True, progress=Non
 ## 📋 Summary
 {result['explanations'].get('summary', 'N/A')}
 """
-        update_progress(0.45, "🔍 Formatting analysis...")
+        
         # Format analysis with detailed styling
         bugs = result['analysis'].get('bugs', [])
         suggestions = result['analysis'].get('suggestions', [])
@@ -392,18 +383,17 @@ def analyze_code(code, language, generate_images, use_mermaid=True, progress=Non
             analysis += "No test coverage recommendations\n"
         
         # Generate quality scores
-        update_progress(0.55, "📊 Calculating quality scores...")
+        
+        # Generate quality scores
         print("📊 Calculating quality scores...")
         quality_scores = score_code_quality(code, language, result['analysis'])
         quality_report = format_quality_report(quality_scores)
-        update_progress(0.65, "✅ Quality scores ready")
         
         flowchart_img = None
         callgraph_img = None
         
         # Generate images if requested
         if generate_images:
-            update_progress(0.70, "🎨 Generating flowchart...")
             print("🎨 Generating diagrams...")
             
             # Create temp directory for images
@@ -471,17 +461,12 @@ def analyze_code(code, language, generate_images, use_mermaid=True, progress=Non
                     flowchart_img = flowchart_path
             
             # Generate call graph with unique name
-            update_progress(0.80, "📊 Generating call graph...")
             callgraph_path = os.path.abspath(f"temp/callgraph_{code_hash}.png")
             if create_callgraph_image(result['knowledge_graph'], callgraph_path):
                 callgraph_img = callgraph_path
             
-            update_progress(0.95, "✅ Diagrams ready")
             print("✅ Diagrams generated!")
-        else:
-            update_progress(0.95, "⏭️ Diagram generation skipped")
         
-        update_progress(1.0, "✅ Analysis complete!")
         return explanation, analysis, quality_report, flowchart_img, callgraph_img
         
     except Exception as e:

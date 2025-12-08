@@ -1,0 +1,24 @@
+graph TD
+    start([Start - binary_search])
+    init_1["Initialize: left, right, <, ... (+4 more)"]
+    loop_2{"FOR/WHILE: left <= right"}
+    cond_3{"IF/CONDITION CHECK"}
+    cond_4{"IF/CONDITION CHECK"}
+    cond_5{"IF/CONDITION CHECK"}
+    process_6["Process/Compute"]
+    return_7["Return Result"]
+    end_8([End])
+    start --> init_1
+    init_1 --> loop_2
+    loop_2 --> cond_3
+    cond_3 --> cond_4
+    cond_4 --> cond_5
+    cond_5 --> process_6
+    process_6 --> return_7
+    return_7 -.->|Loop Back| loop_2
+    return_7 -.->|Recursive Call| start
+    return_7 --> end_8
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_8 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

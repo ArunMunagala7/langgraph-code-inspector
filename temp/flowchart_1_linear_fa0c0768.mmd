@@ -1,0 +1,15 @@
+graph TD
+    start([Start - add_numbers])
+    init_1["Initialize: result"]
+    process_2["Process/Compute"]
+    return_3["Return Result"]
+    end_4([End])
+    start --> init_1
+    init_1 --> process_2
+    process_2 --> return_3
+    return_3 -.->|Recursive Call| start
+    return_3 --> end_4
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_4 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

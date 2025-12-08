@@ -1,0 +1,17 @@
+graph TD
+    start([Start - fibonacci])
+    init_1["Initialize: <"]
+    cond_2{"IF/CONDITION CHECK"}
+    process_3["Process/Compute"]
+    return_4["Return Result"]
+    end_5([End])
+    start --> init_1
+    init_1 --> cond_2
+    cond_2 --> process_3
+    process_3 --> return_4
+    return_4 -.->|Recursive Call| start
+    return_4 --> end_5
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_5 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

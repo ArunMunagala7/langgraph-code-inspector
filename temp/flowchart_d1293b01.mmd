@@ -1,0 +1,20 @@
+graph TD
+    start([Start - two_sum])
+    init_1["Initialize: seen, complement, seen[num]"]
+    loop_2{"FOR/WHILE: i, num in enumerate(nums)"}
+    cond_3{"IF/CONDITION CHECK"}
+    process_4["Find Two Sum"]
+    return_5["Return Result"]
+    end_6([End])
+    start --> init_1
+    init_1 --> loop_2
+    loop_2 --> cond_3
+    cond_3 --> process_4
+    process_4 --> return_5
+    return_5 -.->|Loop Back| loop_2
+    return_5 -.->|Recursive Call| start
+    return_5 --> end_6
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_6 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

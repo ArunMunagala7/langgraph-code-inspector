@@ -1,0 +1,19 @@
+graph TD
+    start([Start - __init__])
+    cond_1{" Check- key in self.cache"}
+    cond_2{" Check- key in self.cache"}
+    cond_3{" Check- len(self.cache) >= self.capacity"}
+    process_4["Check Cache Hit (self.capacity = capa..."]
+    return_5["Return Result"]
+    end_6([End])
+    start --> cond_1
+    cond_1 --> cond_2
+    cond_2 --> cond_3
+    cond_3 --> process_4
+    process_4 --> return_5
+    return_5 -.->|Recursive Call| start
+    return_5 --> end_6
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_6 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

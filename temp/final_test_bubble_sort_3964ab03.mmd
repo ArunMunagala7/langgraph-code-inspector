@@ -1,0 +1,21 @@
+graph TD
+    start([Start - bubble_sort])
+    loop_1{"FOR/WHILE: i in range(n)"}
+    loop_2{"FOR/WHILE: j in range(0, n - i - 1)"}
+    cond_3{" Check- arr[j] > arr[j + 1]"}
+    process_4["Sort Algorithm (n = len(arr))"]
+    return_5["Return Result"]
+    end_6([End])
+    start --> loop_1
+    loop_1 --> loop_2
+    loop_2 --> cond_3
+    cond_3 --> process_4
+    process_4 --> return_5
+    return_5 -.->|Loop Back| loop_1
+    return_5 -.->|Loop Back| loop_2
+    return_5 -.->|Recursive Call| start
+    return_5 --> end_6
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_6 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

@@ -1,0 +1,23 @@
+graph TD
+    start([Start - bubble_sort])
+    init_1["Initialize: n, arr[j+1]"]
+    loop_2{"FOR/WHILE: i in range(n)"}
+    loop_3{"FOR/WHILE: j in range(0, n-i-1)"}
+    cond_4{"IF/CONDITION CHECK"}
+    process_5["Process/Compute"]
+    return_6["Return Result"]
+    end_7([End])
+    start --> init_1
+    init_1 --> loop_2
+    loop_2 --> loop_3
+    loop_3 --> cond_4
+    cond_4 --> process_5
+    process_5 --> return_6
+    return_6 -.->|Loop Back| loop_2
+    return_6 -.->|Loop Back| loop_3
+    return_6 -.->|Recursive Call| start
+    return_6 --> end_7
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_7 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

@@ -1,0 +1,19 @@
+graph TD
+    start([Start - check_age])
+    init_1["Initialize: >"]
+    cond_2{"IF/CONDITION CHECK"}
+    cond_3{"IF/CONDITION CHECK"}
+    process_4["Process/Compute"]
+    return_5["Return Result"]
+    end_6([End])
+    start --> init_1
+    init_1 --> cond_2
+    cond_2 --> cond_3
+    cond_3 --> process_4
+    process_4 --> return_5
+    return_5 -.->|Recursive Call| start
+    return_5 --> end_6
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_6 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;
