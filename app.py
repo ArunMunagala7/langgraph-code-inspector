@@ -40,70 +40,351 @@ def analyze_code(code, language, generate_images, use_mermaid=True, progress=gr.
         progress(0.3, desc="✅ Analysis complete")
         
         progress(0.35, desc="📝 Formatting explanation...")
-        # Format explanation with better styling
+        # Format explanation with detailed styling
         explanation = f"""
 # 📝 Code Explanation
 
 ---
 
 ## 📌 Simple Explanation
-> {result['explanations']['simple']}
+> {result['explanations'].get('simple', 'N/A')}
 
 ---
 
 ## 🔬 Technical Deep Dive
-{result['explanations']['technical']}
+{result['explanations'].get('technical', 'N/A')}
 
 ---
 
-## 📊 Summary
-> {result['explanations']['summary']}
+## 🎯 Purpose & Goals
+{result['explanations'].get('purpose', 'N/A')}
+
+---
+
+## 🌍 Real-World Use Cases
+{result['explanations'].get('use_case', 'N/A')}
+
+---
+
+## 🧮 Key Concepts
+"""
+        # Add key concepts
+        key_concepts = result['explanations'].get('key_concepts', [])
+        if key_concepts:
+            for concept in key_concepts:
+                if isinstance(concept, dict):
+                    explanation += f"""
+### {concept.get('concept', 'Concept')}
+**Explanation:** {concept.get('explanation', 'N/A')}
+**Importance:** {concept.get('importance', 'N/A')}
+
+"""
+                else:
+                    explanation += f"- {concept}\n"
+        else:
+            explanation += "No key concepts identified\n"
+        
+        explanation += """
+---
+
+## 📂 Section-by-Section Breakdown
+"""
+        # Add sections
+        sections = result['explanations'].get('sections', [])
+        if sections:
+            for i, section in enumerate(sections, 1):
+                if isinstance(section, dict):
+                    explanation += f"""
+### Section {i}: {section.get('section_name', 'Unnamed')}
+**Lines:** {section.get('code_lines', 'N/A')}
+**Purpose:** {section.get('purpose', 'N/A')}
+
+**Detailed Explanation:**
+{section.get('detailed_explanation', 'N/A')}
+
+**Key Operations:**
+"""
+                    ops = section.get('key_operations', [])
+                    if ops:
+                        for op in ops:
+                            explanation += f"- {op}\n"
+                    explanation += "\n"
+                else:
+                    explanation += f"- {section}\n"
+        
+        explanation += """
+---
+
+## 💾 Data Structures Used
+"""
+        # Add data structures
+        data_structures = result['explanations'].get('data_structures', [])
+        if data_structures:
+            for ds in data_structures:
+                if isinstance(ds, dict):
+                    explanation += f"""
+**{ds.get('structure', 'Unknown')}**
+- Usage: {ds.get('usage', 'N/A')}
+- Why chosen: {ds.get('why_chosen', 'N/A')}
+
+"""
+                else:
+                    explanation += f"- {ds}\n"
+        
+        explanation += """
+---
+
+## 📊 Complexity Insights
+"""
+        complexity_insight = result['explanations'].get('complexity_insight', {})
+        if isinstance(complexity_insight, dict):
+            explanation += f"""
+**Time Complexity:** {complexity_insight.get('time_complexity_explanation', 'N/A')}
+
+**Space Complexity:** {complexity_insight.get('space_complexity_explanation', 'N/A')}
+
+**Scalability:** {complexity_insight.get('scalability', 'N/A')}
+
+"""
+        
+        explanation += """
+---
+
+## 🎓 Learning Points
+"""
+        learning_points = result['explanations'].get('learning_points', [])
+        if learning_points:
+            for point in learning_points:
+                explanation += f"- {point}\n"
+        
+        explanation += f"""
+---
+
+## 📋 Summary
+{result['explanations'].get('summary', 'N/A')}
 """
         progress(0.45, desc="🔍 Formatting analysis...")
-        # Format analysis with better styling
+        # Format analysis with detailed styling
         bugs = result['analysis'].get('bugs', [])
         suggestions = result['analysis'].get('suggestions', [])
         edge_cases = result['analysis'].get('edge_cases', [])
         complexity = result['analysis'].get('complexity', {})
-        
-        bugs_section = '\n'.join([f"- {b if isinstance(b, str) else b.get('description', str(b))}" for b in bugs]) if bugs else "✅ No bugs detected"
-        suggestions_section = '\n'.join([f"- {s if isinstance(s, str) else s.get('description', str(s))}" for s in suggestions]) if suggestions else "✅ No suggestions"
-        edge_cases_section = '\n'.join([f"- {e if isinstance(e, str) else e.get('description', str(e))}" for e in edge_cases]) if edge_cases else "✅ No edge cases identified"
+        perf_issues = result['analysis'].get('performance_issues', [])
+        security = result['analysis'].get('security_concerns', [])
+        code_quality = result['analysis'].get('code_quality', {})
+        anti_patterns = result['analysis'].get('anti_patterns', [])
+        test_coverage = result['analysis'].get('test_coverage', {})
+        analysis_summary = result['analysis'].get('summary', 'N/A')
         
         analysis = f"""
 # 🔍 Code Analysis Report
 
 ---
 
-## 🐛 Potential Bugs ({len(bugs)})
-{bugs_section}
+## 📊 Overall Assessment
+{analysis_summary}
 
 ---
 
-## 💡 Suggestions ({len(suggestions)})
-{suggestions_section}
+## 🐛 Potential Bugs ({len(bugs)})
+"""
+        if bugs:
+            for i, bug in enumerate(bugs, 1):
+                if isinstance(bug, dict):
+                    analysis += f"""
+### Bug {i}: {bug.get('description', 'Unknown')}
+- **Severity:** {bug.get('severity', 'N/A').upper()}
+- **When Triggered:** {bug.get('when_triggered', 'N/A')}
+- **Impact:** {bug.get('impact', 'N/A')}
+- **Fix:** {bug.get('fix', 'N/A')}
 
+"""
+                else:
+                    analysis += f"- {bug}\n"
+        else:
+            analysis += "✅ No bugs detected\n"
+        
+        analysis += f"""
 ---
 
 ## ⚠️ Edge Cases ({len(edge_cases)})
-{edge_cases_section}
+"""
+        if edge_cases:
+            for i, case in enumerate(edge_cases, 1):
+                if isinstance(case, dict):
+                    analysis += f"""
+### Edge Case {i}: {case.get('case', 'Unknown')}
+- **Expected:** {case.get('expected_behavior', 'N/A')}
+- **Current:** {case.get('current_behavior', 'N/A')}
+- **Fix:** {case.get('fix', 'N/A')}
 
+"""
+                else:
+                    analysis += f"- {case}\n"
+        else:
+            analysis += "✅ No edge cases identified\n"
+        
+        analysis += """
 ---
 
 ## ⏱️ Complexity Analysis
-| Metric | Value |
-|--------|-------|
+"""
+        if complexity:
+            analysis += f"""
+| Metric | Details |
+|--------|---------|
 | **Time Complexity** | {complexity.get('time', 'N/A')} |
 | **Space Complexity** | {complexity.get('space', 'N/A')} |
+| **Bottlenecks** | {complexity.get('bottlenecks', 'N/A')} |
 
+**Optimizations:**
+"""
+            opts = complexity.get('optimizations', [])
+            if opts:
+                for opt in opts:
+                    analysis += f"- {opt}\n"
+            else:
+                analysis += "- No specific optimizations identified\n"
+        else:
+            analysis += "No complexity analysis available\n"
+        
+        analysis += f"""
 ---
 
-## 📈 Knowledge Graph Statistics
-| Metric | Count |
-|--------|-------|
-| **Nodes** | {len(result['knowledge_graph'].get('nodes', []))} |
-| **Edges** | {len(result['knowledge_graph'].get('edges', []))} |
+## ⚡ Performance Issues ({len(perf_issues)})
 """
+        if perf_issues:
+            for i, issue in enumerate(perf_issues, 1):
+                if isinstance(issue, dict):
+                    analysis += f"""
+### Performance Issue {i}
+- **Issue:** {issue.get('issue', 'Unknown')}
+- **Impact:** {issue.get('impact', 'N/A')}
+- **Fix:** {issue.get('fix', 'N/A')}
+
+"""
+                else:
+                    analysis += f"- {issue}\n"
+        else:
+            analysis += "✅ No major performance issues detected\n"
+        
+        analysis += f"""
+---
+
+## 🔐 Security Concerns ({len(security)})
+"""
+        if security:
+            for i, concern in enumerate(security, 1):
+                if isinstance(concern, dict):
+                    analysis += f"""
+### Security Concern {i}
+- **Concern:** {concern.get('concern', 'Unknown')}
+- **Risk Level:** {concern.get('risk_level', 'medium').upper()}
+- **Example:** {concern.get('example', 'N/A')}
+- **Mitigation:** {concern.get('mitigation', 'N/A')}
+
+"""
+                else:
+                    analysis += f"- {concern}\n"
+        else:
+            analysis += "✅ No security concerns identified\n"
+        
+        analysis += """
+---
+
+## 📋 Code Quality Metrics
+"""
+        if code_quality:
+            analysis += f"""
+| Metric | Score | Assessment |
+|--------|-------|------------|
+| **Readability** | {code_quality.get('readability_score', 'N/A')}/10 | {code_quality.get('readability_reasons', 'N/A')} |
+| **Maintainability** | {code_quality.get('maintainability_score', 'N/A')}/10 | {code_quality.get('maintainability_reasons', 'N/A')} |
+
+**Maintainability Issues:**
+"""
+            maint_issues = code_quality.get('maintainability_issues', [])
+            if maint_issues:
+                for issue in maint_issues:
+                    analysis += f"- {issue}\n"
+            else:
+                analysis += "- None identified\n"
+        else:
+            analysis += "No code quality metrics available\n"
+        
+        analysis += f"""
+---
+
+## 💡 Improvement Suggestions ({len(suggestions)})
+"""
+        if suggestions:
+            for i, sugg in enumerate(suggestions, 1):
+                if isinstance(sugg, dict):
+                    analysis += f"""
+### Suggestion {i}
+- **Priority:** {sugg.get('priority', 'medium').upper()}
+- **Suggestion:** {sugg.get('suggestion', 'Unknown')}
+- **Benefit:** {sugg.get('benefit', 'N/A')}
+
+**Before:**
+```
+{sugg.get('before_code', 'N/A')}
+```
+
+**After:**
+```
+{sugg.get('after_code', 'N/A')}
+```
+
+"""
+                else:
+                    analysis += f"- {sugg}\n"
+        else:
+            analysis += "✅ No specific suggestions\n"
+        
+        analysis += f"""
+---
+
+## 🚩 Code Smells & Anti-Patterns ({len(anti_patterns)})
+"""
+        if anti_patterns:
+            for i, pattern in enumerate(anti_patterns, 1):
+                if isinstance(pattern, dict):
+                    analysis += f"""
+### Anti-Pattern {i}: {pattern.get('pattern', 'Unknown')}
+- **Description:** {pattern.get('description', 'N/A')}
+- **Impact:** {pattern.get('impact', 'N/A')}
+- **Refactoring:** {pattern.get('refactoring', 'N/A')}
+
+"""
+                else:
+                    analysis += f"- {pattern}\n"
+        else:
+            analysis += "✅ No major anti-patterns detected\n"
+        
+        analysis += """
+---
+
+## 🧪 Recommended Test Cases
+"""
+        if test_coverage:
+            test_cases = test_coverage.get('recommended_test_cases', [])
+            if test_cases:
+                for i, test in enumerate(test_cases, 1):
+                    if isinstance(test, dict):
+                        analysis += f"""
+### Test {i}: {test.get('case_name', 'Unnamed')}
+- **Input:** {test.get('input', 'N/A')}
+- **Expected Output:** {test.get('expected_output', 'N/A')}
+- **Purpose:** {test.get('purpose', 'N/A')}
+
+"""
+                    else:
+                        analysis += f"- {test}\n"
+            else:
+                analysis += "No specific test cases recommended\n"
+        else:
+            analysis += "No test coverage recommendations\n"
         
         # Generate quality scores
         progress(0.55, desc="📊 Calculating quality scores...")

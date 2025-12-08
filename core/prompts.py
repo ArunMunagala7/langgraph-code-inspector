@@ -73,7 +73,7 @@ Be comprehensive. Create meaningful node IDs (e.g., "f_sum_array", "loop_1", "va
 Return ONLY the JSON object, no additional text.
 """
 
-ANALYZE_PROMPT = """You are a code analysis expert. Using the knowledge graph and code, identify potential issues and provide insights.
+ANALYZE_PROMPT = """You are a comprehensive code analysis expert. Analyze the code deeply using the knowledge graph and identify issues, performance concerns, and improvements.
 
 Language: {language}
 Code:
@@ -84,19 +84,91 @@ Code:
 Knowledge Graph:
 {knowledge_graph}
 
-Analyze the code and return a JSON object with:
+Analyze the code thoroughly and return a JSON object with DETAILED information:
 {{
-  "bugs": [list of potential bugs with descriptions],
-  "edge_cases": [list of edge cases to consider],
+  "bugs": [
+    {{
+      "description": "What the bug is",
+      "severity": "critical/high/medium/low",
+      "when_triggered": "Under what conditions this occurs",
+      "impact": "What happens when this bug occurs",
+      "fix": "How to fix this bug with a brief code example"
+    }},
+    ...
+  ],
+  "edge_cases": [
+    {{
+      "case": "Description of edge case",
+      "expected_behavior": "What should happen",
+      "current_behavior": "What currently happens or might happen",
+      "fix": "How to handle this case"
+    }},
+    ...
+  ],
   "complexity": {{
-    "time": "Big O time complexity",
-    "space": "Big O space complexity"
+    "time": "Big O time complexity with explanation",
+    "space": "Big O space complexity with explanation",
+    "bottlenecks": "Key performance bottlenecks in the code",
+    "optimizations": ["Possible optimizations to improve performance"]
   }},
-  "suggestions": [list of improvement suggestions],
-  "anti_patterns": [list of code smells or anti-patterns]
+  "performance_issues": [
+    {{
+      "issue": "What the performance issue is",
+      "impact": "How it affects performance",
+      "fix": "Suggested optimization"
+    }},
+    ...
+  ],
+  "security_concerns": [
+    {{
+      "concern": "Security risk description",
+      "risk_level": "high/medium/low",
+      "example": "Example scenario where this could be problematic",
+      "mitigation": "How to mitigate this risk"
+    }},
+    ...
+  ],
+  "code_quality": {{
+    "readability_score": "1-10 rating",
+    "readability_reasons": "Why this score (specific observations)",
+    "maintainability_score": "1-10 rating",
+    "maintainability_reasons": "Why this score (specific observations)",
+    "maintainability_issues": ["List of issues that make code hard to maintain"]
+  }},
+  "suggestions": [
+    {{
+      "suggestion": "Improvement recommendation",
+      "priority": "critical/high/medium/low",
+      "benefit": "What improves (readability/performance/maintainability/correctness)",
+      "before_code": "Current approach (code snippet)",
+      "after_code": "Improved approach (code snippet)"
+    }},
+    ...
+  ],
+  "anti_patterns": [
+    {{
+      "pattern": "Code smell or anti-pattern name",
+      "description": "Why this is problematic",
+      "impact": "Negative consequences",
+      "refactoring": "How to refactor this"
+    }},
+    ...
+  ],
+  "test_coverage": {{
+    "recommended_test_cases": [
+      {{
+        "case_name": "Name of test case",
+        "input": "Test input",
+        "expected_output": "Expected output",
+        "purpose": "Why this test is important"
+      }},
+      ...
+    ]
+  }},
+  "summary": "Overall assessment of code quality, key strengths, and main areas for improvement"
 }}
 
-Be thorough but concise. Return ONLY the JSON object, no additional text.
+Be thorough, detailed, and specific with examples. Return ONLY the JSON object, no additional text.
 """
 
 VISUALIZE_PROMPT = """You are a code visualization expert. Generate Mermaid diagrams based on the code structure and knowledge graph.
@@ -193,7 +265,7 @@ graph TD
 Return ONLY valid JSON with these two fields. Ensure all Mermaid syntax is valid.
 """
 
-EXPLAIN_PROMPT = """You are a code explanation expert. Generate multi-level explanations for the code.
+EXPLAIN_PROMPT = """You are a comprehensive code explanation expert. Generate detailed multi-level explanations for the code.
 
 Language: {language}
 Code:
@@ -207,16 +279,51 @@ Knowledge Graph:
 Analysis:
 {analysis}
 
-Generate explanations at multiple levels and return a JSON object:
+Generate comprehensive explanations and return a JSON object:
 {{
-  "simple": "A simple 1-2 sentence explanation for beginners",
-  "technical": "A technical explanation for developers (2-3 sentences)",
-  "line_by_line": [
-    {{"line": 1, "code": "actual code line", "explanation": "what this line does"}},
+  "simple": "A simple 1-2 sentence explanation suitable for beginners or non-programmers",
+  "technical": "A detailed technical explanation for developers (4-5 sentences), covering the algorithm/approach",
+  "purpose": "What is the code trying to accomplish? What problem does it solve?",
+  "use_case": "Real-world scenarios where this code pattern or algorithm is used",
+  "key_concepts": [
+    {{
+      "concept": "Name of the algorithm/technique/pattern used (e.g., 'Two-pointer', 'Memoization', 'Binary Search')",
+      "explanation": "Brief explanation of what this concept is and how it's applied in this code",
+      "importance": "Why this concept is important or useful in this context"
+    }},
     ...
   ],
-  "summary": "A brief summary of the code's purpose and approach"
+  "sections": [
+    {{
+      "section_name": "Name of code section (e.g., 'Initialization', 'Main Loop', 'Validation', 'Return Logic')",
+      "code_lines": "Which lines comprise this section (e.g., 'lines 1-5')",
+      "purpose": "What does this section do?",
+      "detailed_explanation": "Detailed explanation (3-4 sentences) of what happens in this section and why",
+      "key_operations": ["List of key operations/variables/logic in this section"]
+    }},
+    ...
+  ],
+  "data_structures": [
+    {{
+      "structure": "Name of data structure (e.g., 'array', 'dictionary', 'stack')",
+      "usage": "How is this data structure used?",
+      "why_chosen": "Why is this data structure appropriate for this code?"
+    }},
+    ...
+  ],
+  "complexity_insight": {{
+    "time_complexity_explanation": "Why is the time complexity what it is? Walk through the reasoning",
+    "space_complexity_explanation": "Why is the space complexity what it is?",
+    "scalability": "How does this code perform as input size grows?"
+  }},
+  "learning_points": [
+    "Key takeaway 1 that developers should learn from this code",
+    "Key takeaway 2",
+    "Key takeaway 3"
+  ],
+  "summary": "A comprehensive summary covering purpose, approach, key algorithms, complexity characteristics, and the main insight of the code (5-7 sentences)"
 }}
 
-Be clear, accurate, and educational. Return ONLY the JSON object, no additional text.
+Be clear, detailed, accurate, and educational. Include multiple sections for different code blocks/logical parts.
+Return ONLY the JSON object, no additional text.
 """
