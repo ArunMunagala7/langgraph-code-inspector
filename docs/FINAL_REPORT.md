@@ -2,23 +2,119 @@
 ## Multi-Agent Code Understanding System Using LangGraph
 
 **Author:** Arun Munagala  
-**Date:** December 5, 2024  
-**Status:** ✅ COMPLETE & OPERATIONAL
+**Date:** December 8, 2024 (Updated Iteration)
+**Status:** ✅ PRODUCTION READY - Enhanced with Intelligent Code-Specific Flowcharts
 
 ---
 
 ## 📋 Executive Summary
 
-Successfully implemented a complete multi-agent code understanding system that analyzes source code and produces:
+Successfully implemented a complete multi-agent code understanding system with **advanced code-aware flowchart generation** that analyzes source code and produces:
 - Multi-level explanations (simple, technical, line-by-line)
 - Lightweight JSON knowledge graphs
 - Bug detection and complexity analysis
-- Mermaid flowcharts and call graphs
+- **CODE-SPECIFIC Mermaid flowcharts** with intelligent operation labels and actual condition details
+- Interactive call graphs
 - Improvement suggestions
 
-**Total Development Time:** ~2-3 hours  
-**Lines of Code:** ~1,500+  
+**Development Timeline:** December 1-8, 2024  
+**Current Iteration Focus:** Fixed generic flowchart issue with intelligent label generation and actual condition/operation display
+**Lines of Code:** ~2,000+  
 **Test Success Rate:** 100%
+
+---
+
+## 🎯 Current Iteration Achievements (December 8)
+
+### 🔴 Problem Identified
+**Issue:** All flowcharts were identical generic templates showing:
+- Generic "Process/Compute" nodes regardless of actual code
+- Generic "IF/CONDITION CHECK" diamonds with no details
+- No distinction between different algorithms (Two Sum vs Bubble Sort vs Binary Search)
+
+**Root Cause:** LLM prompt contained EXAMPLE template that was being copied verbatim by GPT-4o-mini
+
+### 🟢 Solution Implemented
+Created **Mermaid Flowchart Generator v3** - Structure-Aware System:
+
+#### 1. **Direct Code Parsing (No LLM for Structure)**
+```python
+extract_code_structure(code)
+├─ Functions: Parse function definitions
+├─ Loops: Identify FOR/WHILE loops with iteration variables
+├─ Conditions: Extract IF/ELIF/ELSE statements with ACTUAL condition text
+├─ Operations: Capture variable assignments and operations
+├─ Recursion: Detect recursive calls
+└─ Returns: Count return statements
+```
+
+#### 2. **Intelligent Operation Labels (3-Layer Fallback)**
+```
+Layer 1: LLM Analysis
+├─ Input: Code context + structure + first 5 lines
+├─ Process: "Analyze this code. What operation/action is being performed?"
+├─ Output: "Find Two Sum", "Sort Algorithm", "Calculate LCS Table"
+└─ Sanitization: Remove quotes, colons, braces; limit to 40 chars
+
+Layer 2: Regex Pattern Detection (if LLM fails)
+├─ Array operations → "Swap/Update Elements"
+├─ += operators → "Accumulate/Add"
+├─ Multiple loops + conditions → "Complex Computation"
+├─ Recursion → "Recursive Compute"
+└─ Sort/Search → "Sort Algorithm"/"Search/Find"
+
+Layer 3: Safe Default (if layers 1&2 fail)
+└─ "Process/Compute"
+```
+
+#### 3. **Actual Condition Details**
+```
+Before: cond_3{"IF/CONDITION CHECK"}
+After:  cond_3{"Check- complement in seen"}
+After:  cond_3{"Check- arr[mid] == target"}
+After:  cond_3{"Check- arr[j] > arr[j + 1]"}
+```
+
+#### 4. **Operation Context**
+```
+Before: process_4["Process/Compute"]
+After:  process_4["Find Two Sum (seen = [])"]
+After:  process_4["Sort Algorithm (n = len(arr))"]
+After:  process_4["Search Array (left, right = 0, len(ar..."]
+```
+
+### ✅ Results
+**Tested with multiple algorithms:**
+
+| Algorithm | Condition Details | Operation Label |
+|-----------|-------------------|-----------------|
+| Two Sum | `Check- complement in seen` | `Find Two Sum (seen = [])` |
+| Bubble Sort | `Check- arr[j] > arr[j + 1]` | `Sort Algorithm (n = len(arr))` |
+| Binary Search | `Check- arr[mid] == target` | `Search Array (left, right = 0...` |
+| Binary Search | `Check- arr[mid] < target` | (Multiple conditions shown) |
+| LCS | `Check- text1[i-1] == text2[j-1]` | `Calculate LCS Table` |
+| Fibonacci | (Condition in code) | `Recursive Compute` |
+
+### 📊 Technical Implementation
+
+**Files Modified:**
+- `app.py`: Import v3 generator, enhanced analysis dict
+- `core/mermaid_generator_v3.py`: Complete rewrite with intelligent system
+- `core/mermaid_generator_v2.py`: Enhanced prompts for fallback
+
+**Key Functions:**
+- `extract_code_structure()`: Direct regex parsing of functions, loops, conditions, operations
+- `detect_operation_type()`: LLM-based intelligent detection with regex fallback
+- `build_mermaid_from_structure()`: Constructs flowchart using extracted structure
+- `sanitize_operation_label()`: Escapes special characters for Mermaid compatibility
+- `validate_mermaid_syntax()`: mmdc validation with error messages
+- `create_flowchart()`: Main orchestrator with rendering to PNG
+
+**Validation System:**
+- Generates Mermaid syntax
+- Validates with mmdc CLI (15-second timeout)
+- If invalid: LLM analyzes error + original code + attempts fix (max 3 retries)
+- Returns valid Mermaid or None
 
 ---
 

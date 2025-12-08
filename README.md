@@ -164,12 +164,20 @@ outputs/
 
 ## 🆕 Recent Updates (December 2024)
 
-### ✨ Mermaid Flowchart Integration
-- **Hybrid approach**: LLM generates semantic descriptions → Mermaid syntax → Professional diagrams
-- **Auto-validation**: Detects syntax errors before rendering
-- **Error correction**: LLM-based auto-fix with retry loop (max 2 attempts)
-- **Smart label cleaning**: Removes reserved keywords, special characters, and formatting issues
-- **60% file size reduction**: 58KB vs 149KB for equivalent matplotlib flowcharts
+### ✨ **ADVANCED Mermaid Flowchart Generator v3** - Code-Specific Intelligence
+- **Structure-Aware Generation**: Direct code parsing (NO LLM for structure) eliminates template copying
+- **Intelligent Operation Labels**: LLM analyzes code semantics to generate specific labels
+  - Examples: "Find Two Sum", "Sort Algorithm", "Calculate LCS Table", "Search Array"
+  - Fallback to regex patterns: "Swap Elements", "Accumulate/Add", "Recursive Compute"
+  - Final fallback: Safe "Process/Compute" default
+- **Actual Condition Details**: Shows REAL conditions being checked
+  - Examples: `Check- arr[mid] == target`, `Check- complement in seen`, `Check- arr[j] > arr[j + 1]`
+  - Extracts actual condition text from code lines
+- **Operation Context**: Displays actual variable assignments and operations
+  - Examples: `Find Two Sum (seen = [])`, `Sort Algorithm (n = len(arr))`, `Search Array (left, right = 0...)`
+- **Triple Sanitization Layer**: Ensures Mermaid compatibility with LLM + regex + default fallbacks
+- **Automatic Validation**: Syntax checking with LLM-based error correction (max 3 retry attempts)
+- **60% file size reduction**: 53KB vs 149KB for equivalent matplotlib flowcharts
 - **Universal compatibility**: Auto-renders on GitHub, Notion, VS Code, Confluence, Obsidian
 - **Editable source**: `.mmd` text files can be manually edited and re-rendered
 
@@ -185,6 +193,9 @@ outputs/
 - Label sanitization (removes `()`, `[]`, `??`, trailing `%`)
 - Direct mmdc rendering with fallback to preview mode
 - Updated Gradio UI with Mermaid/Matplotlib toggle
+- **NEW**: v3 flowchart system with code-specific intelligent labels
+- **NEW**: Actual condition extraction and display
+- **NEW**: Operation context and variable details in flowchart boxes
 
 ---
 

@@ -124,11 +124,26 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
             flowchart_path = os.path.abspath(f"temp/flowchart_{code_hash}.png")
             if use_mermaid:
                 try:
-                    from core.mermaid_generator_v2 import create_flowchart
+                    from core.mermaid_generator_v3 import create_flowchart
+                    
+                    # Build comprehensive analysis for flowchart generation
+                    flowchart_analysis = {
+                        'code': code,
+                        'parsed_code': result.get('code', code),
+                        'functions': result['analysis'].get('functions', []),
+                        'loops': result['analysis'].get('loops', []),
+                        'conditions': result['analysis'].get('conditions', []),
+                        'recursion': result['analysis'].get('recursion', False),
+                        'bugs': result['analysis'].get('bugs', []),
+                        'complexity': result['analysis'].get('complexity', {}),
+                        'edge_cases': result['analysis'].get('edge_cases', []),
+                        'kg_nodes': len(result['knowledge_graph'].get('nodes', [])),
+                        'kg_edges': len(result['knowledge_graph'].get('edges', [])),
+                    }
                     
                     success = create_flowchart(
                         code,
-                        result['analysis'],
+                        flowchart_analysis,
                         flowchart_path
                     )
                     

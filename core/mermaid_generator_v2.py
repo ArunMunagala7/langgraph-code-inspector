@@ -10,53 +10,43 @@ import re
 from typing import Dict, Any, Optional, Tuple
 from core.utils import get_llm_response
 
-MERMAID_PROMPT = """You are a flowchart expert. Generate a Mermaid flowchart for this code.
+MERMAID_PROMPT = """You are a flowchart expert. Analyze this code DEEPLY and create a flowchart that EXACTLY matches its logic.
 
-Code:
+CODE TO ANALYZE:
 ```
 [CODE_PLACEHOLDER]
 ```
 
-Analysis:
+ANALYSIS FROM PARSER:
 [ANALYSIS_PLACEHOLDER]
 
-CRITICAL RULES:
-1. Use ONLY alphanumeric and underscore for node IDs (step1, step2, etc.)
-2. Keep labels SHORT - max 20 chars, no special chars except underscore
-3. Use quotes if label has spaces: step1["Label with spaces"]
-4. Show loops with backward dotted arrows -.->|Loop Back|
-5. Show recursion with arrows back to start
-6. Start with: graph TD
-7. End with: linkStyle default stroke:#1976D2,stroke-width:2.5px;
+YOUR TASK:
+1. READ the code line by line
+2. UNDERSTAND what it does (logic flow, loops, decisions, recursion)
+3. IDENTIFY all loops, conditions, function calls, returns
+4. AVOID using the template - create UNIQUE flowchart for THIS code
+5. Make labels SPECIFIC to this code (use actual variable/function names)
+6. Show ALL loops with backward dotted arrows
+7. Show ALL recursion with arrows back to start
+8. Show ALL conditions/decisions as diamond nodes
 
-EXAMPLE:
-```
-graph TD
-    start([Start])
-    step1[Initialize]
-    step2{Check condition}
-    step3[Process]
-    loop[Update]
-    stepEnd([End])
-    
-    start --> step1
-    step1 --> step2
-    step2 -->|Yes| step3
-    step3 --> loop
-    loop -.->|Loop Back| step2
-    step2 -->|No| stepEnd
-    
-    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
-    style stepEnd fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
-    style step2 fill:#FFD54F,stroke:#F9A825,stroke-width:2px
-    style step1 fill:#64B5F6,stroke:#1976D2,stroke-width:2px
-    style step3 fill:#64B5F6,stroke:#1976D2,stroke-width:2px
-    style loop fill:#64B5F6,stroke:#1976D2,stroke-width:2px
-    
-    linkStyle default stroke:#1976D2,stroke-width:2.5px;
-```
+CRITICAL RULES FOR MERMAID:
+- Node IDs: alphanumeric + underscore only (not special chars)
+- Labels: SHORT, specific to THIS code (max 25 chars)
+- Quotes for labels with spaces: step1["My label"]
+- Loops: Use dotted arrows -.->|Loop Back|
+- Decisions: Use {Decision text}
+- Boxes: Use [Box text]
+- Circles (start/end): Use ([Text])
 
-Generate ONLY the Mermaid code block:
+STRUCTURE YOUR FLOWCHART:
+1. START node ([Start])
+2. Input/initialization steps
+3. Main logic with ALL loops and conditions
+4. Recursion calls (if any) with arrows back to START
+5. Return/END node ([End])
+
+Generate ONLY Mermaid code - NO explanations, NO examples:
 """
 
 FIX_PROMPT = """Fix this broken Mermaid flowchart. The error is:
@@ -183,9 +173,28 @@ def generate_mermaid_code(code: str, analysis: dict) -> str:
     try:
         print("  🤖 Generating Mermaid flowchart...")
         
+        # Build detailed analysis string for the prompt
+        analysis_text = f"""
+FUNCTION STRUCTURE:
+- Functions found: {analysis.get('functions', [])}
+- Loops: {analysis.get('loops', [])}
+- Conditions: {analysis.get('conditions', [])}
+- Recursion: {'Yes' if analysis.get('recursion') else 'No'}
+
+CODE METRICS:
+- Complexity: Time={analysis.get('complexity', {}).get('time', 'N/A')}, Space={analysis.get('complexity', {}).get('space', 'N/A')}
+- Knowledge Graph: {analysis.get('kg_nodes', 0)} nodes, {analysis.get('kg_edges', 0)} edges
+
+POTENTIAL ISSUES:
+- Bugs: {len(analysis.get('bugs', []))}
+- Edge Cases: {len(analysis.get('edge_cases', []))}
+
+CODE FLOW:
+Follow the actual code flow - identify ALL loops and conditions in the code above.
+"""
+        
         # Use safer string formatting to avoid conflicts
-        analysis_str = json.dumps(analysis, indent=2)
-        prompt = MERMAID_PROMPT.replace('{code}', code).replace('{analysis}', analysis_str)
+        prompt = MERMAID_PROMPT.replace('[CODE_PLACEHOLDER]', code).replace('[ANALYSIS_PLACEHOLDER]', analysis_text)
         
         response = get_llm_response(prompt, model="gpt-4o-mini")
         
@@ -216,6 +225,17 @@ def generate_mermaid_code(code: str, analysis: dict) -> str:
         mermaid_code = clean_mermaid_labels(mermaid_code)
         
         print(f"  📄 Generated {len(mermaid_code.split(chr(10)))} lines")
+        print(f"  🔍 Analyzing code structure...")
+        
+        # Print what was detected
+        loops = analysis.get('loops', [])
+        if loops:
+            print(f"     ✓ Detected {len(loops)} loop(s): {', '.join(str(l)[:30] for l in loops)}")
+        conditions = analysis.get('conditions', [])
+        if conditions:
+            print(f"     ✓ Detected {len(conditions)} condition(s)")
+        if analysis.get('recursion'):
+            print(f"     ✓ Detected recursion")
         
         # Validation loop - retry up to 3 times
         max_retries = 3
@@ -238,6 +258,12 @@ def generate_mermaid_code(code: str, analysis: dict) -> str:
                 break
         
         return mermaid_code if mermaid_code and mermaid_code.startswith('graph') else None
+        
+    except Exception as e:
+        print(f"  ❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
         
     except Exception as e:
         print(f"  ❌ Error: {e}")
