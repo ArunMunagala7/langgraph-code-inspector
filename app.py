@@ -31,10 +31,28 @@ def generate_test_cases(code, language, analysis):
         from langchain_openai import ChatOpenAI
         from langchain_core.messages import HumanMessage
         
-        # Extract key information from analysis
+        # Extract key information from analysis (safely handle complex objects)
         functions = analysis.get('functions', [])
         edge_cases = analysis.get('edge_cases', [])
         bugs = analysis.get('bugs', [])
+        
+        # Convert to simple strings to avoid JSON serialization issues
+        def safe_stringify(items):
+            if not items:
+                return 'None'
+            result = []
+            for item in items:
+                if isinstance(item, dict):
+                    # Extract only simple fields from dicts
+                    simple_fields = {k: v for k, v in item.items() if isinstance(v, (str, int, float, bool, type(None)))}
+                    result.append(str(simple_fields) if simple_fields else str(item.get('name', str(item))))
+                else:
+                    result.append(str(item))
+            return '\n- '.join(result)
+        
+        functions_str = safe_stringify(functions)
+        edge_cases_str = safe_stringify(edge_cases)
+        bugs_str = safe_stringify(bugs)
         
         # Build prompt for LeetCode-style test cases
         prompt_text = f"""You are a coding interview expert. Generate comprehensive test cases in LeetCode format for this code.
@@ -44,10 +62,10 @@ Code:
 {code}
 ```
 
-Key information:
-- Functions: {json.dumps(functions, indent=2) if functions else 'None'}
-- Edge Cases: {json.dumps([str(e) for e in edge_cases], indent=2) if edge_cases else 'None'}
-- Known Bugs/Issues: {json.dumps([str(b) for b in bugs], indent=2) if bugs else 'None'}
+Key information from code analysis:
+Functions: {functions_str}
+Edge Cases: {edge_cases_str}
+Known Bugs/Issues: {bugs_str}
 
 Generate test cases in this EXACT format:
 
@@ -63,7 +81,7 @@ Explanation: [why this test case matters]
 
 Requirements:
 1. Start with basic/normal test cases (2-3 cases)
-2. Include ALL edge cases mentioned in the analysis (empty arrays, single elements, nulls, etc.)
+2. Include ALL edge cases mentioned in the analysis (empty inputs, single elements, nulls, etc.)
 3. Add boundary condition tests (min/max values, large inputs)
 4. Add error cases if relevant (invalid inputs, type errors)
 5. Include tests for identified bugs
