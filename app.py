@@ -17,7 +17,7 @@ from agents.quality_agent import score_code_quality, format_quality_report
 
 def generate_test_cases(code, language, analysis):
     """
-    Generate pytest test cases from code analysis using LLM.
+    Generate LeetCode-style test cases from code analysis using LLM.
     
     Args:
         code: Source code to test
@@ -25,7 +25,7 @@ def generate_test_cases(code, language, analysis):
         analysis: Analysis result from run_code_inspector
         
     Returns:
-        String containing copy-paste ready pytest code
+        String containing organized test cases in LeetCode format
     """
     try:
         from langchain_openai import ChatOpenAI
@@ -36,8 +36,8 @@ def generate_test_cases(code, language, analysis):
         edge_cases = analysis.get('edge_cases', [])
         bugs = analysis.get('bugs', [])
         
-        # Build prompt
-        prompt_text = f"""You are a Python testing expert. Generate comprehensive pytest test cases for this code.
+        # Build prompt for LeetCode-style test cases
+        prompt_text = f"""You are a coding interview expert. Generate comprehensive test cases in LeetCode format for this code.
 
 Code:
 ```{language}
@@ -49,17 +49,31 @@ Key information:
 - Edge Cases: {json.dumps([str(e) for e in edge_cases], indent=2) if edge_cases else 'None'}
 - Known Bugs/Issues: {json.dumps([str(b) for b in bugs], indent=2) if bugs else 'None'}
 
-Generate pytest test cases that:
-1. Test all functions identified
-2. Cover all edge cases mentioned
-3. Verify bugs are handled or fixed
-4. Include boundary condition tests
-5. Include error/exception tests
+Generate test cases in this EXACT format:
 
-Return ONLY valid, copy-paste ready pytest code. No explanations.
-Start with imports, then test functions.
+Test Case 1: [Brief description]
+Input: [specific input values]
+Output: [expected output]
+Explanation: [why this test case matters]
 
-Generate tests now:"""
+Test Case 2: [Brief description]
+Input: [specific input values]
+Output: [expected output]
+Explanation: [why this test case matters]
+
+Requirements:
+1. Start with basic/normal test cases (2-3 cases)
+2. Include ALL edge cases mentioned in the analysis (empty arrays, single elements, nulls, etc.)
+3. Add boundary condition tests (min/max values, large inputs)
+4. Add error cases if relevant (invalid inputs, type errors)
+5. Include tests for identified bugs
+6. Number each test case sequentially
+7. Be specific with input/output values (don't use placeholders)
+8. Keep explanations concise but informative
+
+Generate at least 8-12 comprehensive test cases covering normal, edge, boundary, and error scenarios.
+
+Generate test cases now:"""
         
         # Call LLM with invoke method
         llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
@@ -82,6 +96,75 @@ Generate tests now:"""
         error_msg = f"# ⚠️ Could not generate tests: {str(e)}\n# Error: {type(e).__name__}\n# Traceback:\n"
         error_msg += "# " + "\n# ".join(traceback.format_exc().split("\n"))
         return error_msg
+
+
+def generate_code_from_question(question, language):
+    """
+    Generate code solution from a coding question using LLM.
+    
+    Args:
+        question: Coding question/problem statement
+        language: Target programming language
+        
+    Returns:
+        Tuple of (generated_code, status_message, language)
+    """
+    try:
+        if not question.strip():
+            return "", "⚠️ Please enter a coding question", language
+        
+        from langchain_openai import ChatOpenAI
+        from langchain_core.messages import HumanMessage
+        
+        # Build prompt for code generation
+        prompt_text = f"""You are an expert programmer. Generate clean, well-commented, production-quality code to solve this problem.
+
+Problem: {question}
+
+Language: {language}
+
+Requirements:
+1. Write complete, runnable code
+2. Include helpful comments explaining the logic
+3. Use proper naming conventions for the language
+4. Handle edge cases
+5. Follow best practices for {language}
+6. Include a docstring/comment explaining what the function does
+7. Return ONLY the code, no explanations outside code comments
+
+Generate the code now:"""
+        
+        # Call LLM
+        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+        message = HumanMessage(content=prompt_text)
+        response = llm.invoke([message])
+        
+        # Extract code
+        response_text = response.content
+        
+        # Clean up response (remove markdown if present)
+        if f"```{language}" in response_text:
+            response_text = response_text.split(f"```{language}")[1].split("```")[0]
+        elif "```python" in response_text:
+            response_text = response_text.split("```python")[1].split("```")[0]
+        elif "```javascript" in response_text:
+            response_text = response_text.split("```javascript")[1].split("```")[0]
+        elif "```java" in response_text:
+            response_text = response_text.split("```java")[1].split("```")[0]
+        elif "```cpp" in response_text or "```c++" in response_text:
+            response_text = response_text.split("```")[1].split("```")[0]
+        elif "```" in response_text:
+            response_text = response_text.split("```")[1].split("```")[0]
+        
+        generated_code = response_text.strip()
+        status = f"✅ Code generated successfully! ({len(generated_code.split())} words, {len(generated_code.splitlines())} lines)"
+        
+        return generated_code, status, language
+        
+    except Exception as e:
+        import traceback
+        error_msg = f"❌ Error generating code: {str(e)}\n{traceback.format_exc()}"
+        return "", error_msg, language
 
 
 def analyze_code(code, language, generate_images, use_mermaid=True):
@@ -735,6 +818,23 @@ with gr.Blocks(title="AI Code Understanding System") as demo:
                 info="Choose a pre-loaded algorithm (Easy → Hard)"
             )
             
+            # NEW: Generate code from question
+            gr.Markdown("---\n**💡 OR Generate Code from Question:**")
+            question_input = gr.Textbox(
+                label="❓ Enter Coding Question",
+                placeholder="e.g., 'Write a function to reverse a linked list' or 'Implement binary search'",
+                lines=2
+            )
+            question_language = gr.Dropdown(
+                choices=["python", "javascript", "java", "c++", "go", "rust"],
+                value="python",
+                label="Language for Generated Code"
+            )
+            generate_code_btn = gr.Button("✨ Generate Code", size="sm")
+            generation_status = gr.Markdown("", visible=True)
+            
+            gr.Markdown("---")
+            
             # Code input
             code_input = gr.Code(
                 label="Code to Analyze",
@@ -817,6 +917,12 @@ with gr.Blocks(title="AI Code Understanding System") as demo:
         fn=load_sample,
         inputs=[sample_dropdown],
         outputs=[code_input, language_input]
+    )
+    
+    generate_code_btn.click(
+        fn=generate_code_from_question,
+        inputs=[question_input, question_language],
+        outputs=[code_input, generation_status, language_input]
     )
     
     analyze_btn.click(
