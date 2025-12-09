@@ -1,0 +1,35 @@
+graph TD
+    start([Start - get_median])
+    loop_1{"FOR/WHILE: i<=r"}
+    loop_2{"FOR/WHILE: i<=greater"}
+    cond_3{" Check- size<=threshold"}
+    cond_4{" Check- a[i]<pivot"}
+    cond_5{" Check- a[i]>pivot"}
+    cond_6{" Else Branch"}
+    cond_7{" Check- k<=l_size"}
+    cond_8{" Check- k<=l_size+equal_size"}
+    cond_9{" Else Branch"}
+    cond_10{" Check- __name__ == '__main__'"}
+    process_11["Calculate Median (s = sorted(lst))"]
+    return_12["Return Result"]
+    end_13([End])
+    start --> loop_1
+    loop_1 --> loop_2
+    loop_2 --> cond_3
+    cond_3 --> cond_4
+    cond_4 --> cond_5
+    cond_5 --> cond_6
+    cond_6 --> cond_7
+    cond_7 --> cond_8
+    cond_8 --> cond_9
+    cond_9 --> cond_10
+    cond_10 --> process_11
+    process_11 --> return_12
+    return_12 -.->|Loop Back| loop_1
+    return_12 -.->|Loop Back| loop_2
+    return_12 -.->|Recursive Call| start
+    return_12 --> end_13
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_13 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

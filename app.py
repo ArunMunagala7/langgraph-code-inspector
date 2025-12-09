@@ -13,6 +13,7 @@ from core.diagram_generator import create_callgraph_image
 from core.repo_analyzer import analyze_repository
 from core.notebook_parser import parse_notebook, is_notebook_file, get_notebook_summary
 from agents.quality_agent import score_code_quality, format_quality_report
+from core.output_evaluator import evaluate_outputs, save_evaluation_to_file, format_evaluation_for_display
 
 
 def generate_test_cases(code, language, analysis):
@@ -649,14 +650,28 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
             print(f"⚠️ Test generation error: {e}")
             test_cases = f"# ⚠️ Could not generate tests\n# Error: {str(e)}"
         
-        return explanation, analysis, quality_report, flowchart_img, callgraph_img, test_cases
+        # Evaluate output quality with LLM-as-Judge
+        evaluation_markdown = ""
+        print("📊 Evaluating output quality...")
+        try:
+            evaluation = evaluate_outputs(code, result)
+            # Save evaluation to file
+            eval_file = save_evaluation_to_file(code, result, evaluation)
+            # Format for display
+            evaluation_markdown = format_evaluation_for_display(evaluation)
+            print(f"✅ Evaluation complete! Avg score: {evaluation.get('average_score', 0)}/10")
+        except Exception as e:
+            print(f"⚠️ Evaluation error: {e}")
+            evaluation_markdown = f"# ⚠️ Evaluation Failed\n\nError: {str(e)}"
+        
+        return explanation, analysis, quality_report, flowchart_img, callgraph_img, test_cases, evaluation_markdown
         
     except Exception as e:
         error_msg = f"❌ Error: {str(e)}"
         print(error_msg)
         import traceback
         traceback.print_exc()
-        return error_msg, "", "", None, None, ""
+        return error_msg, "", "", None, None, "", ""
 
 
 def load_sample(sample_name):
@@ -915,6 +930,9 @@ with gr.Blocks(title="AI Code Understanding System") as demo:
                     lines=20,
                     max_lines=50
                 )
+            
+            with gr.Tab("📊 Evaluation"):
+                evaluation_output = gr.Markdown(label="LLM-as-Judge Quality Assessment")
     
     # Examples
     gr.Markdown("### 📚 Quick Examples")
@@ -949,7 +967,7 @@ with gr.Blocks(title="AI Code Understanding System") as demo:
     analyze_btn.click(
         fn=analyze_code,
         inputs=[code_input, language_input, generate_images_checkbox, use_mermaid_checkbox],
-        outputs=[explanation_output, analysis_output, quality_output, flowchart_output, callgraph_output, test_output]
+        outputs=[explanation_output, analysis_output, quality_output, flowchart_output, callgraph_output, test_output, evaluation_output]
     )
     
     # Repository Analysis Tab
@@ -1051,6 +1069,6 @@ if __name__ == "__main__":
     demo.launch(
         server_name="0.0.0.0",  # Allow external access
         server_port=7860,
-        share=False,  # Set to True to create a public link
+        share=True,  # Create a public shareable link
         show_error=True
     )
