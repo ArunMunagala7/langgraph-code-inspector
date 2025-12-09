@@ -15,6 +15,67 @@ from core.notebook_parser import parse_notebook, is_notebook_file, get_notebook_
 from agents.quality_agent import score_code_quality, format_quality_report
 
 
+def generate_test_cases(code, language, analysis):
+    """
+    Generate pytest test cases from code analysis using LLM.
+    
+    Args:
+        code: Source code to test
+        language: Programming language
+        analysis: Analysis result from run_code_inspector
+        
+    Returns:
+        String containing copy-paste ready pytest code
+    """
+    try:
+        from langchain.chat_models import ChatOpenAI
+        
+        # Extract key information from analysis
+        functions = analysis.get('functions', [])
+        edge_cases = analysis.get('edge_cases', [])
+        bugs = analysis.get('bugs', [])
+        
+        # Build prompt
+        prompt_text = f"""You are a Python testing expert. Generate comprehensive pytest test cases for this code.
+
+Code:
+```{language}
+{code}
+```
+
+Key information:
+- Functions: {json.dumps(functions, indent=2) if functions else 'None'}
+- Edge Cases: {json.dumps([str(e) for e in edge_cases], indent=2) if edge_cases else 'None'}
+- Known Bugs/Issues: {json.dumps([str(b) for b in bugs], indent=2) if bugs else 'None'}
+
+Generate pytest test cases that:
+1. Test all functions identified
+2. Cover all edge cases mentioned
+3. Verify bugs are handled or fixed
+4. Include boundary condition tests
+5. Include error/exception tests
+
+Return ONLY valid, copy-paste ready pytest code. No explanations.
+Start with imports, then test functions.
+
+Generate tests now:"""
+        
+        # Call LLM
+        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+        response = llm.predict(prompt_text)
+        
+        # Clean up response (remove markdown if present)
+        if "```python" in response:
+            response = response.split("```python")[1].split("```")[0]
+        elif "```" in response:
+            response = response.split("```")[1].split("```")[0]
+        
+        return response.strip()
+        
+    except Exception as e:
+        return f"# ⚠️ Could not generate tests: {str(e)}\n# Error details: {type(e).__name__}"
+
+
 def analyze_code(code, language, generate_images, use_mermaid=True):
     """
     Analyze code and return results.
@@ -26,7 +87,7 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
         use_mermaid: Whether to use Mermaid for flowcharts (default: True)
         
     Returns:
-        Tuple of (explanation, analysis, quality_report, flowchart_img, callgraph_img)
+        Tuple of (explanation, analysis, quality_report, flowchart_img, callgraph_img, test_cases)
     """
     try:
         if not code.strip():
@@ -467,14 +528,23 @@ def analyze_code(code, language, generate_images, use_mermaid=True):
             
             print("✅ Diagrams generated!")
         
-        return explanation, analysis, quality_report, flowchart_img, callgraph_img
+        # Generate test cases
+        test_cases = ""
+        print("🧪 Generating test cases...")
+        try:
+            test_cases = generate_test_cases(code, language, result['analysis'])
+        except Exception as e:
+            print(f"⚠️ Test generation error: {e}")
+            test_cases = f"# ⚠️ Could not generate tests\n# Error: {str(e)}"
+        
+        return explanation, analysis, quality_report, flowchart_img, callgraph_img, test_cases
         
     except Exception as e:
         error_msg = f"❌ Error: {str(e)}"
         print(error_msg)
         import traceback
         traceback.print_exc()
-        return error_msg, "", "", None, None
+        return error_msg, "", "", None, None, ""
 
 
 def load_sample(sample_name):
@@ -708,6 +778,15 @@ with gr.Blocks(title="AI Code Understanding System") as demo:
             
             with gr.Tab("🕸️ Call Graph"):
                 callgraph_output = gr.Image(label="Call Graph", type="filepath")
+            
+            with gr.Tab("🧪 Generated Tests"):
+                test_output = gr.Code(
+                    language="python",
+                    label="Generated Test Cases",
+                    lines=20,
+                    max_lines=50,
+                    info="Copy-paste ready pytest test cases covering edge cases and bugs"
+                )
     
     # Examples
     gr.Markdown("### 📚 Quick Examples")
@@ -736,7 +815,7 @@ with gr.Blocks(title="AI Code Understanding System") as demo:
     analyze_btn.click(
         fn=analyze_code,
         inputs=[code_input, language_input, generate_images_checkbox, use_mermaid_checkbox],
-        outputs=[explanation_output, analysis_output, quality_output, flowchart_output, callgraph_output]
+        outputs=[explanation_output, analysis_output, quality_output, flowchart_output, callgraph_output, test_output]
     )
     
     # Repository Analysis Tab
