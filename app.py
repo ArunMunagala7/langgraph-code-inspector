@@ -28,7 +28,8 @@ def generate_test_cases(code, language, analysis):
         String containing copy-paste ready pytest code
     """
     try:
-        from langchain.chat_models import ChatOpenAI
+        from langchain_openai import ChatOpenAI
+        from langchain_core.messages import HumanMessage
         
         # Extract key information from analysis
         functions = analysis.get('functions', [])
@@ -60,20 +61,27 @@ Start with imports, then test functions.
 
 Generate tests now:"""
         
-        # Call LLM
+        # Call LLM with invoke method
         llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
-        response = llm.predict(prompt_text)
+        message = HumanMessage(content=prompt_text)
+        response = llm.invoke([message])
+        
+        # Extract text from response
+        response_text = response.content
         
         # Clean up response (remove markdown if present)
-        if "```python" in response:
-            response = response.split("```python")[1].split("```")[0]
-        elif "```" in response:
-            response = response.split("```")[1].split("```")[0]
+        if "```python" in response_text:
+            response_text = response_text.split("```python")[1].split("```")[0]
+        elif "```" in response_text:
+            response_text = response_text.split("```")[1].split("```")[0]
         
-        return response.strip()
+        return response_text.strip()
         
     except Exception as e:
-        return f"# ⚠️ Could not generate tests: {str(e)}\n# Error details: {type(e).__name__}"
+        import traceback
+        error_msg = f"# ⚠️ Could not generate tests: {str(e)}\n# Error: {type(e).__name__}\n# Traceback:\n"
+        error_msg += "# " + "\n# ".join(traceback.format_exc().split("\n"))
+        return error_msg
 
 
 def analyze_code(code, language, generate_images, use_mermaid=True):
@@ -784,8 +792,7 @@ with gr.Blocks(title="AI Code Understanding System") as demo:
                     language="python",
                     label="Generated Test Cases",
                     lines=20,
-                    max_lines=50,
-                    info="Copy-paste ready pytest test cases covering edge cases and bugs"
+                    max_lines=50
                 )
     
     # Examples
