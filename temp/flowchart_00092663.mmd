@@ -1,0 +1,28 @@
+graph TD
+    start([Start - __init__])
+    loop_1{"FOR/WHILE: char in word"}
+    loop_2{"FOR/WHILE: char in word"}
+    loop_3{"FOR/WHILE: char in prefix"}
+    cond_4{" Check- char not in node.children"}
+    cond_5{" Check- char not in node.children"}
+    cond_6{" Check- char not in node.children"}
+    process_7["Create Trie Structure (self.children ..."]
+    return_8["Return Result"]
+    end_9([End])
+    start --> loop_1
+    loop_1 --> loop_2
+    loop_2 --> loop_3
+    loop_3 --> cond_4
+    cond_4 --> cond_5
+    cond_5 --> cond_6
+    cond_6 --> process_7
+    process_7 --> return_8
+    return_8 -.->|Loop Back| loop_1
+    return_8 -.->|Loop Back| loop_2
+    return_8 -.->|Loop Back| loop_3
+    return_8 -.->|Recursive Call| start
+    return_8 --> end_9
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_9 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

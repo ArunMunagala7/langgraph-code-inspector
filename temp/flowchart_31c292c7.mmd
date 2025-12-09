@@ -1,0 +1,38 @@
+graph TD
+    start([Start - __init__])
+    loop_1{"FOR/WHILE: fast and fast.next"}
+    loop_2{"FOR/WHILE: left and right"}
+    loop_3{"FOR/WHILE: current"}
+    cond_4{" Check- the list is empty or has one n..."}
+    cond_5{" Check- not head or not head.next"}
+    cond_6{" Check- not head"}
+    cond_7{" Check- left.value <= right.value"}
+    cond_8{" Else Branch"}
+    cond_9{" Check- left"}
+    cond_10{" Check- right"}
+    cond_11{" Check- __name__ == '__main__'"}
+    process_12["Sort Algorithm (self.value = value  #..."]
+    return_13["Return Result"]
+    end_14([End])
+    start --> loop_1
+    loop_1 --> loop_2
+    loop_2 --> loop_3
+    loop_3 --> cond_4
+    cond_4 --> cond_5
+    cond_5 --> cond_6
+    cond_6 --> cond_7
+    cond_7 --> cond_8
+    cond_8 --> cond_9
+    cond_9 --> cond_10
+    cond_10 --> cond_11
+    cond_11 --> process_12
+    process_12 --> return_13
+    return_13 -.->|Loop Back| loop_1
+    return_13 -.->|Loop Back| loop_2
+    return_13 -.->|Loop Back| loop_3
+    return_13 -.->|Recursive Call| start
+    return_13 --> end_14
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_14 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

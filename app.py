@@ -55,43 +55,46 @@ def generate_test_cases(code, language, analysis):
         bugs_str = safe_stringify(bugs)
         
         # Build prompt for LeetCode-style test cases
-        prompt_text = f"""You are a coding interview expert. Generate comprehensive test cases in LeetCode format for this code.
+        prompt_text = f"""You are a LeetCode test case generator. Generate test cases in STRICT LeetCode format.
 
-Code:
+CODE TO TEST:
 ```{language}
 {code}
 ```
 
-Key information from code analysis:
+ANALYSIS INFO:
 Functions: {functions_str}
 Edge Cases: {edge_cases_str}
-Known Bugs/Issues: {bugs_str}
+Bugs: {bugs_str}
 
-Generate test cases in this EXACT format:
+CRITICAL INSTRUCTIONS - YOU MUST FOLLOW THIS FORMAT EXACTLY:
 
-Test Case 1: [Brief description]
-Input: [specific input values]
-Output: [expected output]
-Explanation: [why this test case matters]
+Test Case 1: Basic Example
+Input: [exact input value]
+Output: [exact expected output]
+Explanation: [brief reason]
 
-Test Case 2: [Brief description]
-Input: [specific input values]
-Output: [expected output]
-Explanation: [why this test case matters]
+Test Case 2: Edge Case - Empty Input
+Input: [exact input value]
+Output: [exact expected output]
+Explanation: [brief reason]
 
-Requirements:
-1. Start with basic/normal test cases (2-3 cases)
-2. Include ALL edge cases mentioned in the analysis (empty inputs, single elements, nulls, etc.)
-3. Add boundary condition tests (min/max values, large inputs)
-4. Add error cases if relevant (invalid inputs, type errors)
-5. Include tests for identified bugs
-6. Number each test case sequentially
-7. Be specific with input/output values (don't use placeholders)
-8. Keep explanations concise but informative
+Test Case 3: Edge Case - Single Element
+Input: [exact input value]
+Output: [exact expected output]
+Explanation: [brief reason]
 
-Generate at least 8-12 comprehensive test cases covering normal, edge, boundary, and error scenarios.
+... continue for 8-12 test cases ...
 
-Generate test cases now:"""
+RULES:
+1. DO NOT write code or function calls - only Input/Output/Explanation
+2. Use actual values, not variable names (e.g., "Input: [1, 2, 3]" NOT "Input: arr = [1, 2, 3]")
+3. Each test case MUST have exactly 3 lines: Input, Output, Explanation
+4. Number sequentially: Test Case 1, Test Case 2, etc.
+5. Include: basic cases, edge cases, boundary cases, error cases
+6. Be specific with all values
+
+START GENERATING NOW:"""
         
         # Call LLM with invoke method
         llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)

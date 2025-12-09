@@ -1,0 +1,24 @@
+graph TD
+    start([Start - __init__])
+    loop_1{"FOR/WHILE: last_node.next"}
+    loop_2{"FOR/WHILE: current"}
+    loop_3{"FOR/WHILE: current"}
+    cond_4{" Check- not self.head"}
+    cond_5{" Check- __name__ == '__main__'"}
+    process_6["Initialize Node (self.value = value)"]
+    end_7([End])
+    start --> loop_1
+    loop_1 --> loop_2
+    loop_2 --> loop_3
+    loop_3 --> cond_4
+    cond_4 --> cond_5
+    cond_5 --> process_6
+    process_6 -.->|Loop Back| loop_1
+    process_6 -.->|Loop Back| loop_2
+    process_6 -.->|Loop Back| loop_3
+    process_6 -.->|Recursive Call| start
+    process_6 --> end_7
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_7 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

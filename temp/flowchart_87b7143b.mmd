@@ -1,0 +1,26 @@
+graph TD
+    start([Start - bfs])
+    loop_1{"FOR/WHILE: BFS and a set to track visited"}
+    loop_2{"FOR/WHILE: queue"}
+    loop_3{"FOR/WHILE: neighbor in graph.get(current_"}
+    cond_4{" Check- neighbor not in visited"}
+    cond_5{" Check- __name__ == '__main__'"}
+    process_6["Breadth-First Search (queue = deque([..."]
+    return_7["Return Result"]
+    end_8([End])
+    start --> loop_1
+    loop_1 --> loop_2
+    loop_2 --> loop_3
+    loop_3 --> cond_4
+    cond_4 --> cond_5
+    cond_5 --> process_6
+    process_6 --> return_7
+    return_7 -.->|Loop Back| loop_1
+    return_7 -.->|Loop Back| loop_2
+    return_7 -.->|Loop Back| loop_3
+    return_7 -.->|Recursive Call| start
+    return_7 --> end_8
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_8 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

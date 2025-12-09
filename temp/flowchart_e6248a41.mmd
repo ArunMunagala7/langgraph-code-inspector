@@ -1,0 +1,32 @@
+graph TD
+    start([Start - find_duplicates])
+    loop_1{"FOR/WHILE: char in input_string"}
+    loop_2{"FOR/WHILE: the character in the dictionar"}
+    loop_3{"FOR/WHILE: char, count in char_count.item"}
+    cond_4{" Check- char.isalnum()"}
+    cond_5{" Check- char in char_count"}
+    cond_6{" Else Branch"}
+    cond_7{" Check- count > 1"}
+    cond_8{" Check- __name__ == '__main__'"}
+    process_9["Find Duplicates (char_count = [])"]
+    return_10["Return Result"]
+    end_11([End])
+    start --> loop_1
+    loop_1 --> loop_2
+    loop_2 --> loop_3
+    loop_3 --> cond_4
+    cond_4 --> cond_5
+    cond_5 --> cond_6
+    cond_6 --> cond_7
+    cond_7 --> cond_8
+    cond_8 --> process_9
+    process_9 --> return_10
+    return_10 -.->|Loop Back| loop_1
+    return_10 -.->|Loop Back| loop_2
+    return_10 -.->|Loop Back| loop_3
+    return_10 -.->|Recursive Call| start
+    return_10 --> end_11
+
+    style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style end_11 fill:#F44336,stroke:#C62828,stroke-width:3px,color:#fff
+    linkStyle default stroke:#1976D2,stroke-width:2.5px;

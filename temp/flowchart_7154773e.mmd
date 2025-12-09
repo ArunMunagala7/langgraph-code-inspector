@@ -1,8 +1,8 @@
 graph TD
-    start([Start - two_sum])
-    loop_1{"FOR/WHILE: i, num in enumerate(nums)"}
-    cond_2{" Check- complement in seen"}
-    process_3["Find Two Sum (seen = [])"]
+    start([Start - Script])
+    loop_1{"FOR/WHILE: (int end = 0; end < s.length()"}
+    cond_2{" Check- (charIndex.find(s[end]) != cha..."}
+    process_3["Find Longest Substring (int maxLen = 0,)"]
     return_4["Return Result"]
     end_5([End])
     start --> loop_1
@@ -10,7 +10,6 @@ graph TD
     cond_2 --> process_3
     process_3 --> return_4
     return_4 -.->|Loop Back| loop_1
-    return_4 -.->|Recursive Call| start
     return_4 --> end_5
 
     style start fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
